@@ -1,14 +1,14 @@
 {{ template "header.html" }}
 {{ template "nav.html" }}
 <div class="content threequarters">
-  {{ range . }}
+  {{ range .Articles }}
   <article>
     <div id="article_{{ .ID }}" class="article">
       <header>
 	<h2>{{ .Title }}</h2>
       </header>
       <div class="articlemeta">
-	<div>By: <i>{{ .Author.Name }}</i> <{{ .Author.Email }}></div>
+	<div>By: <i>{{ .Author.FName }}</i> <{{ .Author.Email }}></div>
 	<div><time datetime="{{ .Date }}">{{ .Date | formatDate }}</time></div>
 	<div class="accordion">
 	  <input type="checkbox" id="verify{{ .ID }}">
@@ -29,8 +29,8 @@
       <div class="article padded">
 	{{ .Body | printHTML }}
       </div>
-      <hr />
     </div>
+    <hr />
     {{ end }}
 </div>
 
