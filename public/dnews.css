@@ -1,4 +1,4 @@
-.body {
+body {
   font-family: Avenir, 'Open Sans', sans-serif;
 }
 
@@ -20,11 +20,15 @@ hr {
 .articlemeta {
 }
 
+.nav img {
+  width: 100px;
+}
+
 .content .article ul li {
   list-style-type: disc;
 }
 .content .article ul li ul li {
-  list-style-type: lower-alpha;
+  list-style-type: circle;
 }
 
 footer {
