@@ -1,0 +1,31 @@
+hash: 10f11910aabeaa6c6707607c9127ebab796f21060f4bcec918a498cfb4a0fc36
+updated: 2016-08-18T14:40:24.04187562-06:00
+imports:
+- name: github.com/agl/ed25519
+  version: 278e1ec8e8a6e017cd07577924d6766039146ced
+  subpackages:
+  - edwards25519
+- name: github.com/ebfe/bcrypt_pbkdf
+  version: 3c8d2dcb253a13078b655a02b8e4bdc0e2b1fe35
+  subpackages:
+  - blowfish
+- name: github.com/ebfe/signify
+  version: c493ab32499badf2c2de3e97cef50a5f3c0c778e
+- name: github.com/lib/pq
+  version: 80f8150043c80fb52dee6bc863a709cdac7ec8f8
+  subpackages:
+  - oid
+- name: github.com/microcosm-cc/bluemonday
+  version: 9dc199233bf72cc1aad9b61f73daf2f0075b9ee4
+- name: github.com/qbit/pgenv
+  version: 3523eda2090fdbbdf9b40b8abeae4e7dac4f869f
+- name: github.com/russross/blackfriday
+  version: 93622da34e54fb6529bfb7c57e710f37a8d9cbd8
+- name: github.com/shurcooL/sanitized_anchor_name
+  version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
+- name: golang.org/x/net
+  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  subpackages:
+  - html
+  - html/atom
+testImports: []

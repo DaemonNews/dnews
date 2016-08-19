@@ -1,0 +1,37 @@
+{{ template "header.html" }}
+{{ template "nav.html" }}
+<div class="content threequarters">
+  {{ range . }}
+  <article>
+    <div id="article_{{ .ID }}" class="article">
+      <header>
+	<h2>{{ .Title }}</h2>
+      </header>
+      <div class="articlemeta">
+	<div>By: <i>{{ .Author.Name }}</i> <{{ .Author.Email }}></div>
+	<div><time datetime="{{ .Date }}">{{ .Date | formatDate }}</time></div>
+	<div class="accordion">
+	  <input type="checkbox" id="verify{{ .ID }}">
+	  <label for="verify{{ .ID }}"><a>Verified Article</a></label>
+	  <div>
+            <div class="padded white">
+	      <div class="siginfo">
+		Author's pubkey:<br />
+		<pre>{{ .Author.Pubkey }}</pre><br />
+		Article's signature:<br />
+		<pre>{{ .Signature }}</pre><br />
+		<a href="/article/raw/{{ .ID }}">Raw article</a>
+	      </div>
+            </div>
+	  </div>
+	</div> 
+      </div>
+      <div class="article padded">
+	{{ .Body | printHTML }}
+      </div>
+      <hr />
+    </div>
+    {{ end }}
+</div>
+
+{{ template "footer.html" }}

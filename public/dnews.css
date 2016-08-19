@@ -1,0 +1,32 @@
+.body {
+  font-family: Avenir, 'Open Sans', sans-serif;
+}
+
+hr {
+  border: 1px solid #ccc;
+}
+
+.siginfo {
+}
+
+.pubkey {
+  font-style: italic;
+}
+
+.sig {
+  font-style: italic;
+}
+
+.articlemeta {
+}
+
+.content .article ul li {
+  list-style-type: disc;
+}
+.content .article ul li ul li {
+  list-style-type: lower-alpha;
+}
+
+footer {
+  text-align: center;
+}

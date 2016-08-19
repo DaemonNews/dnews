@@ -1,0 +1,3 @@
+package: dnews
+import:
+- package: github.com/ebfe/signify
