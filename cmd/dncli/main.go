@@ -63,8 +63,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		var id int
-		err = db.QueryRow(`INSERT INTO articles (title, body, created) values ($1, $2, $3) returning id`, a.Title, a.Body, a.Date).Scan(&id)
+		_, err = db.Query(`INSERT INTO articles (title, body, created) values ($1, $2, $3)`, a.Title, a.Body, a.Date)
 
 		if err != nil {
 			log.Fatal(err)
