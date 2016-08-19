@@ -31,7 +31,8 @@ SELECT
  body,
  key,
  email,
- fname || ' ' || lname as name,
+ fname,
+ lname,
  sig
 from articles
 join users on
@@ -52,7 +53,7 @@ limit $1
 
 	for rows.Next() {
 		var a = Article{}
-		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.Name, &a.Signature)
+		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
 		if err != nil {
 			return nil, err
 		}
