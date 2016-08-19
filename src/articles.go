@@ -59,7 +59,7 @@ func (a *Article) LoadFromFile(p string) error {
 		if AuthorRE.Match(line) {
 			aline := AuthorRE.ReplaceAllString(string(line), "$1")
 			a.Author.Parse(aline)
-			fmt.Printf("Author: %s\n", a.Author.Name)
+			fmt.Printf("Author: %s %s (%s)\n", a.Author.FName, a.Author.LName, a.Author.Email)
 		}
 		if TitleRE.Match(line) {
 			a.Title = TitleRE.ReplaceAllString(string(line), "$1")
