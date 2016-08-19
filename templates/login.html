@@ -1,0 +1,22 @@
+{{ template "header.html" }}
+{{ template "nav.html" }}
+<div class="content threequarters">
+  <div class="padded">
+  <form action="/login" method="POST">
+    <div class="container">
+      <label class="quarter right">User name:</label>
+      <div class="half">
+        <input type="text" class="fill" name="user">
+      </div>
+    </div>
+    <div class="container">
+      <label class="quarter right">Password:</label>
+      <div class="half">
+        <input type="password" class="fill" name="passwd">
+      </div>
+    </div>
+    <input type="submit" class="btn red" value="LOGIN"/>
+  </form>
+  </div>
+</div>
+{{ template "footer.html" }}
