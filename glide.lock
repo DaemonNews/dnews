@@ -1,5 +1,5 @@
 hash: 10f11910aabeaa6c6707607c9127ebab796f21060f4bcec918a498cfb4a0fc36
-updated: 2016-08-19T14:57:43.937575132-06:00
+updated: 2016-08-20T07:35:13.681739771-06:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
@@ -24,13 +24,13 @@ imports:
 - name: github.com/microcosm-cc/bluemonday
   version: 9dc199233bf72cc1aad9b61f73daf2f0075b9ee4
 - name: github.com/qbit/pgenv
-  version: 3523eda2090fdbbdf9b40b8abeae4e7dac4f869f
+  version: 64ee9b68f79a5694f6dee5f968126c3b8cc1bf98
 - name: github.com/russross/blackfriday
   version: 93622da34e54fb6529bfb7c57e710f37a8d9cbd8
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
 - name: golang.org/x/net
-  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  version: 7394c112eae4dba7e96bfcfe738e6373d61772b4
   subpackages:
   - html
   - html/atom
