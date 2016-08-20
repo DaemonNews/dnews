@@ -104,15 +104,12 @@ func main() {
 			return
 		}
 
-		var u = &dnews.User{}
 		val := session.Values["user"]
 		if _, ok := val.(*dnews.User); !ok {
 			val = &dnews.User{}
 			session.Values["user"] = &val
 			session.Save(r, w)
 		}
-
-		log.Println(u, val)
 
 		data := struct {
 			Articles *dnews.Articles
@@ -131,5 +128,6 @@ func main() {
 			return
 		}
 	})
+
 	http.ListenAndServe(":8080", nil)
 }
