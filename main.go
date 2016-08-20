@@ -6,7 +6,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/qbit/dnews/src"
 )
@@ -36,9 +38,25 @@ func init() {
 }
 
 func main() {
+	r := mux.NewRouter()
 	fs := http.FileServer(http.Dir("public"))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
-	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/article/raw/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		article, err := dnews.GetRawArticle(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprintf(w, "%s", article.Body)
+	})
+	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -78,7 +96,7 @@ func main() {
 			}
 		}
 	})
-	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -92,23 +110,12 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusFound)
 
 	})
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "NO!", http.StatusNotFound)
 		return
 	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/advocacy", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		a, err := dnews.GetNArticles(10)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -119,6 +126,38 @@ func main() {
 			val = &dnews.User{}
 			session.Values["user"] = &val
 			session.Save(r, w)
+		}
+
+		data := struct {
+			User interface{}
+		}{
+			&val,
+		}
+
+		err = templ.ExecuteTemplate(w, "advocacy.html", data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		session, err := store.Get(r, "session-name")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		val := session.Values["user"]
+		if _, ok := val.(*dnews.User); !ok {
+			val = &dnews.User{}
+			session.Values["user"] = &val
+			session.Save(r, w)
+		}
+
+		a, err := dnews.GetNArticles(10)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		data := struct {
@@ -139,5 +178,6 @@ func main() {
 		}
 	})
 
+	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
 }
