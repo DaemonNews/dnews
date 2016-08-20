@@ -37,7 +37,6 @@ func init() {
 
 func main() {
 	fs := http.FileServer(http.Dir("public"))
-
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
