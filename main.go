@@ -62,11 +62,8 @@ func main() {
 				return
 			}
 			if u.Authed {
-				log.Printf("Authed %s", user)
 				session.Values["user"] = u
-
 				session.Save(r, w)
-
 				http.Redirect(w, r, "/", http.StatusFound)
 			} else {
 				log.Printf("Invalid user: %s", user)
@@ -81,6 +78,20 @@ func main() {
 				}
 			}
 		}
+	})
+	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		session, err := store.Get(r, "session-name")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		session.Options = &sessions.Options{
+			MaxAge: -1,
+		}
+		session.Save(r, w)
+		http.Redirect(w, r, "/", http.StatusFound)
+
 	})
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "NO!", http.StatusNotFound)
