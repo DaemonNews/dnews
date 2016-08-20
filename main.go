@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"html/template"
 	"log"
@@ -30,6 +31,10 @@ var funcMap = template.FuncMap{
 
 var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
+func init() {
+	gob.Register(&dnews.User{})
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("public"))
 
@@ -51,14 +56,35 @@ func main() {
 			}
 		} else {
 			// do auth
-			log.Printf("Authed %s", user)
-			session.Values["user"] = dnews.User{}
-			fmt.Printf("%v", session.Values["user"])
-			//session.Values["user"].Authed = true
+			u, err := dnews.Auth(user, passwd)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if u.Authed {
+				log.Printf("Authed %s", user)
+				session.Values["user"] = u
 
-			session.Save(r, w)
-			http.Redirect(w, r, "/", http.StatusFound)
+				session.Save(r, w)
+
+				http.Redirect(w, r, "/", http.StatusFound)
+			} else {
+				log.Printf("Invalid user: %s", user)
+				err = templ.ExecuteTemplate(w, "login.html", struct {
+					Error string
+				}{
+					"Invalid User!",
+				})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
 		}
+	})
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "NO!", http.StatusNotFound)
+		return
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
@@ -78,18 +104,27 @@ func main() {
 			return
 		}
 
-		var u = dnews.User{}
-		u.Authed = true
-		u.FName = "sucka"
-		fmt.Println(u)
+		var u = &dnews.User{}
+		val := session.Values["user"]
+		if _, ok := val.(*dnews.User); !ok {
+			val = &dnews.User{}
+			session.Values["user"] = &val
+			session.Save(r, w)
+		}
+
+		log.Println(u, val)
 
 		data := struct {
 			Articles *dnews.Articles
+			// we did a type check above, but it would be nice to
+			// be able to use the actual type when sending to the
+			// templating stuffs :(
+			User interface{}
 		}{
 			&a,
+			&val,
 		}
-		session.Save(r, w)
-		err = templ.ExecuteTemplate(w, "header.html", u)
+
 		err = templ.ExecuteTemplate(w, "index.html", data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -23,7 +23,7 @@ create table users (
 	lname text,
 	email text,
 	hash text,
-	username text
+	username text unique not null
 );
 
 create table pubkeys (

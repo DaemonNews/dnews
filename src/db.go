@@ -16,6 +16,23 @@ func DBConnect() (*sql.DB, error) {
 	return sql.Open("postgres", cstr.ToString())
 }
 
+// Auth checks a user's username / password for login
+func Auth(u string, p string) (*User, error) {
+	var user = &User{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(`select id, created, fname, lname, email, username, (hash = crypt($1, hash)) as authed from users where username = $2`, p, u).Scan(&user.ID, &user.Created, &user.FName, &user.LName, &user.Email, &user.User, &user.Authed)
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	return user, nil
+}
+
 // GetNArticles returns N most recent articles from the DB
 func GetNArticles(n int) (Articles, error) {
 	var as = Articles{}
@@ -49,7 +66,7 @@ limit $1
 	}
 
 	defer rows.Close()
-	defer rows.Close()
+	defer db.Close()
 
 	for rows.Next() {
 		var a = Article{}

@@ -4,6 +4,11 @@
           <li><a href="/">Home</a></li>
           <li><a href="/archives">Archives</a></li>
           <li><a href="/ml">Mailing List</a></li>
-          <li><a href="/login">Admin</a></li>
+{{ if .Authed }}
+          <li><a href="/admin">Admin</a></li>
+          <li><a href="/logout">Log out</a></li>
+{{ else }}
+          <li><a href="/login">Log in</a></li>
+{{ end }}
         </ul>
       </nav>

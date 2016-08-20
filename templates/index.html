@@ -1,5 +1,5 @@
-{{ template "header.html" }}
-{{ template "nav.html" }}
+{{ template "header.html" .User }}
+{{ template "nav.html" .User }}
 <div class="content threequarters">
   {{ range .Articles }}
   <article>

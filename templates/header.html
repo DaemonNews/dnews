@@ -14,10 +14,10 @@
     </style>
   </head>
   <body>
-{{ if .User.Authed }}
-<div class="user">Welcome!</div>
+{{ if .Authed }}
+<div class="user">Welcome, {{ .FName }}!</div>
 {{ else }}
-<div class="user">!!'{{ .User.FName }}' Coward!</div>
+<div class="user">!!'{{ .FName }}' Coward!</div>
 {{ end }}
 <div class="container padded">
 

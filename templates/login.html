@@ -1,6 +1,7 @@
 {{ template "header.html" }}
 {{ template "nav.html" }}
 <div class="content threequarters">
+  {{ .Error }}
   <div class="padded">
   <form action="/login" method="POST">
     <div class="container">
