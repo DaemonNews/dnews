@@ -33,6 +33,29 @@ func Auth(u string, p string) (*User, error) {
 	return user, nil
 }
 
+// GetRawArticle returns the raw markdown for a given article
+func GetRawArticle(id int) (*Article, error) {
+	var a = Article{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(`
+SELECT
+ body
+from articles
+where
+  id = $1
+`, id).Scan(&a.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	return &a, nil
+}
+
 // GetNArticles returns N most recent articles from the DB
 func GetNArticles(n int) (Articles, error) {
 	var as = Articles{}
