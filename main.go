@@ -7,22 +7,16 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/gorilla/feeds"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/qbit/dnews/src"
 )
 
 var store = sessions.NewCookieStore([]byte("something-very-secret"))
-
-func getArticles(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	a := dnews.Articles{}
-	fmt.Fprintf(w, "Hi there, I love %s! %v", r.URL.Path[1:], a)
-}
+var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
 var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
@@ -30,8 +24,6 @@ var funcMap = template.FuncMap{
 		return template.HTML(string(b))
 	},
 }
-
-var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
 func init() {
 	gob.Register(&dnews.User{})
@@ -41,6 +33,50 @@ func main() {
 	r := mux.NewRouter()
 	fs := http.FileServer(http.Dir("public"))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
+	r.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
+		err = templ.ExecuteTemplate(w, "feed.html", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	})
+	r.HandleFunc("/feed/{type}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		feedType := vars["type"]
+		fmt.Println(feedType)
+		now := time.Now()
+		feed := &feeds.Feed{
+			Title:       "Daemon.News",
+			Link:        &feeds.Link{Href: "https://daemon.news"},
+			Description: "*BSD News and Advocacy",
+			Author:      &feeds.Author{Name: "The Daemon News Team", Email: "daemons@daemon.news"},
+			Created:     now,
+			Copyright:   "This work is copyright © Daemon.News",
+		}
+
+		// TODO populate items
+
+		switch feedType {
+		case "atom":
+			atom, err := feed.ToAtom()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(w, atom)
+		case "rss":
+			rss, err := feed.ToRss()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(w, rss)
+		default:
+			http.Error(w, "Invalid feed type!", http.StatusInternalServerError)
+			return
+		}
+
+	})
 	r.HandleFunc("/article/raw/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])

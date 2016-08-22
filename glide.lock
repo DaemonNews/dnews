@@ -1,5 +1,5 @@
 hash: 10f11910aabeaa6c6707607c9127ebab796f21060f4bcec918a498cfb4a0fc36
-updated: 2016-08-20T09:06:39.793231851-06:00
+updated: 2016-08-20T12:51:26.960138747-06:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
@@ -13,6 +13,8 @@ imports:
   version: c493ab32499badf2c2de3e97cef50a5f3c0c778e
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/feeds
+  version: 441264de03a8117ed530ae8e049d8f601a33a099
 - name: github.com/gorilla/mux
   version: cf79e51a62d8219d52060dfc1b4e810414ba2d15
 - name: github.com/gorilla/securecookie
