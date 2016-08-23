@@ -52,6 +52,15 @@ type Article struct {
 	Tags      Tags
 }
 
+// Join returns a concat'd string of Tag names
+func (t *Tags) Join() string {
+	var s []string
+	for _, t := range *t {
+		s = append(s, t.Name)
+	}
+	return strings.Join(s, ", ")
+}
+
 // Verify validates the signature of an article
 func (a *Article) Verify(pub []byte) (*bool, error) {
 	_, pcontent, err := signify.ReadFile(bytes.NewReader(pub))
@@ -109,7 +118,7 @@ func (a *Article) LoadFromFile(p string) error {
 				t.Name = strings.TrimSpace(tag)
 				a.Tags = append(a.Tags, &t)
 			}
-			fmt.Printf("Tags: %s\n", ts)
+			fmt.Printf("Tags: %s\n", a.Tags.Join())
 		}
 
 		a.Body = append(a.Body, line...)
