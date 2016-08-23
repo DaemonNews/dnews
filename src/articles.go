@@ -3,9 +3,11 @@ package dnews
 import (
 	//	"database/sql"
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/ebfe/signify"
@@ -32,15 +34,32 @@ type Article struct {
 	Body      []byte
 	Author    User
 	Signed    bool
-	Signature string
+	Signature []byte
 	Headline  string
 	Rank      int
+	Tags      Tags
 }
 
 // Verify validates the signature of an article
-func (a *Article) Verify(pub *signify.PublicKey, sig *signify.Signature) bool {
-	a.Signed = signify.Verify(pub, a.Body, sig)
-	return a.Signed
+func (a *Article) Verify(pub []byte) (*bool, error) {
+	_, pcontent, err := signify.ReadFile(bytes.NewReader(pub))
+	_, scontent, err := signify.ReadFile(bytes.NewReader([]byte(a.Signature)))
+
+	if err != nil {
+		return nil, err
+	}
+	sig, err := signify.ParseSignature(scontent)
+	if err != nil {
+		return nil, err
+	}
+
+	pkey, err := signify.ParsePublicKey(pcontent)
+	if err != nil {
+		return nil, err
+	}
+
+	a.Signed = signify.Verify(pkey, a.Body, sig)
+	return &a.Signed, nil
 }
 
 // LoadFromFile takes the File of a given page and loads the markdown for rendering
