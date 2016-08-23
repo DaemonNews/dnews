@@ -56,6 +56,43 @@ where
 	return &a, nil
 }
 
+// GetArticle returns the raw markdown for a given article
+func GetArticle(id int) (*Article, error) {
+	var a = Article{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(`
+SELECT
+ articles.id,
+ published,
+ title,
+ body,
+ key,
+ email,
+ fname,
+ lname,
+ sig
+from articles
+join users on
+  (articles.authorid = users.id)
+join pubkeys on
+  (pubkeys.userid = users.id)
+where
+  articles.id = $1
+`, id).Scan(&a.ID, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
+	if err != nil {
+		return nil, err
+	}
+
+	a.HTML()
+
+	defer db.Close()
+
+	return &a, nil
+}
+
 // GetNArticles returns N most recent articles from the DB
 func GetNArticles(n int) (Articles, error) {
 	var as = Articles{}
@@ -135,4 +172,33 @@ func SearchArticles(query string, limit int) (Articles, error) {
 	}
 
 	return as, nil
+}
+
+// InsertUser takes a User and inserts them into the database
+func InsertUser(u User) (*int, error) {
+	var id int
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(`INSERT INTO users (fname, lname, email, username, hash) values ($1, $2, $3, (select hash($4)))`, u.FName, u.LName, u.Email, u.User, u.Pass).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
+// InsertArticle takes an Article and inserts it into the db, it will verify the Author exists
+// prior to inserting
+func InsertArticle(a Article) (*int, error) {
+	var id int
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	err = db.QueryRow(`INSERT INTO articles (title, body, created, live) values ($1, $2, $3, true)`, a.Title, a.Body, a.Date).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
 }
