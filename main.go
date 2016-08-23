@@ -18,6 +18,13 @@ import (
 var store = sessions.NewCookieStore([]byte("something-very-secret"))
 var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
+type response struct {
+	Error    string
+	User     interface{}
+	Articles *dnews.Articles
+	Article  *dnews.Article
+}
+
 var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
 	"printHTML": func(b []byte) template.HTML {
@@ -29,21 +36,64 @@ func init() {
 	gob.Register(&dnews.User{})
 }
 
+func renderTemplate(w http.ResponseWriter, d *response, t string) {
+	err = templ.ExecuteTemplate(w, t, d)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		return nil, err
+	}
+
+	uVal := session.Values["user"]
+	if _, ok := uVal.(*dnews.User); !ok {
+		uVal = &dnews.User{}
+		session.Values["user"] = &uVal
+		session.Save(r, w)
+	}
+
+	var data = response{}
+	data.User = &uVal
+	return &data, nil
+}
+
 func main() {
 	r := mux.NewRouter()
 	fs := http.FileServer(http.Dir("public"))
 	http.Handle("/public/", http.StripPrefix("/public/", fs))
 	r.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
-		err = templ.ExecuteTemplate(w, "feed.html", nil)
+		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		renderTemplate(w, data, "feeds.html")
 	})
+	r.HandleFunc("/ml", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, data, "ml.html")
+	})
+	r.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, data, "search_results.html")
+	})
+
 	r.HandleFunc("/feed/{type}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		feedType := vars["type"]
-		fmt.Println(feedType)
 		now := time.Now()
 		feed := &feeds.Feed{
 			Title:       "Daemon.News",
@@ -54,7 +104,23 @@ func main() {
 			Copyright:   "This work is copyright © Daemon.News",
 		}
 
+		a, err := dnews.GetNArticles(10)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		// TODO populate items
+		feed.Items = []*feeds.Item{}
+
+		for _, article := range a {
+			f := feeds.Item{}
+			f.Title = article.Title
+			f.Link = &feeds.Link{Href: fmt.Sprintf("http://daemon.news/article/%d", article.ID)}
+			f.Author = &feeds.Author{Name: article.Author.FName, Email: article.Author.Email}
+			f.Created = article.Date
+
+			feed.Items = append(feed.Items, &f)
+		}
 
 		switch feedType {
 		case "atom":
@@ -75,6 +141,27 @@ func main() {
 			http.Error(w, "Invalid feed type!", http.StatusInternalServerError)
 			return
 		}
+
+	})
+	r.HandleFunc("/article/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		article, err := dnews.GetArticle(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data.Article = article
+		renderTemplate(w, data, "article.html")
 
 	})
 	r.HandleFunc("/article/raw/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
@@ -146,35 +233,14 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusFound)
 
 	})
-	r.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "NO!", http.StatusNotFound)
-		return
-	})
 	r.HandleFunc("/advocacy", func(w http.ResponseWriter, r *http.Request) {
-		session, err := store.Get(r, "session-name")
+		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		val := session.Values["user"]
-		if _, ok := val.(*dnews.User); !ok {
-			val = &dnews.User{}
-			session.Values["user"] = &val
-			session.Save(r, w)
-		}
-
-		data := struct {
-			User interface{}
-		}{
-			&val,
-		}
-
-		err = templ.ExecuteTemplate(w, "advocacy.html", data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		renderTemplate(w, data, "advocacy.html")
 	})
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
