@@ -26,6 +26,18 @@ var TitleRE = regexp.MustCompile(`^title:\s(.*)$`)
 // DateRE matches our article date
 var DateRE = regexp.MustCompile(`^date:\s(.*)$`)
 
+// TagRE matches the tags for a given article
+var TagRE = regexp.MustCompile(`^tags:\s(.*)$`)
+
+// Tag represents a specific tag for an article
+type Tag struct {
+	ID   int
+	Name string
+}
+
+// Tags are a collection of Tag
+type Tags []*Tag
+
 // Article is the base type for all articles
 type Article struct {
 	ID        int
@@ -88,6 +100,16 @@ func (a *Article) LoadFromFile(p string) error {
 			d := DateRE.ReplaceAllString(string(line), "$1")
 			a.Date, _ = time.Parse(time.RFC1123, d)
 			fmt.Printf("Date: %s\n", a.Date)
+		}
+
+		if TagRE.Match(line) {
+			ts := TagRE.ReplaceAllString(string(line), "$1")
+			for _, tag := range strings.Split(ts, ",") {
+				var t Tag
+				t.Name = strings.TrimSpace(tag)
+				a.Tags = append(a.Tags, &t)
+			}
+			fmt.Printf("Tags: %s\n", ts)
 		}
 
 		a.Body = append(a.Body, line...)
