@@ -1,6 +1,7 @@
 package dnews
 
 import (
+	"fmt"
 	"regexp"
 	"time"
 )
@@ -14,6 +15,8 @@ type User struct {
 	Email   string
 	Pubkey  string
 	User    string
+	Pass    string
+	Hash    string
 	Authed  bool
 }
 
@@ -24,6 +27,11 @@ func (u *User) Parse(s string) {
 	u.FName = userLineRE.ReplaceAllString(s, "$1")
 	u.LName = userLineRE.ReplaceAllString(s, "$2")
 	u.Email = userLineRE.ReplaceAllString(s, "$3")
+}
+
+// Combine concatenates FName, LName and Email into one line
+func (u *User) Combine() string {
+	return fmt.Sprintf("%s %s <%s>", u.FName, u.LName, u.Email)
 }
 
 // Users are a collection of User
