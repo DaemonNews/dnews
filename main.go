@@ -204,8 +204,6 @@ func main() {
 		user := r.FormValue("user")
 		passwd := r.FormValue("passwd")
 
-		log.Println(user, passwd)
-
 		if user == "" && passwd == "" {
 			http.Redirect(w, r, "/", http.StatusFound)
 		} else {

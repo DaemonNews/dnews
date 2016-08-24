@@ -199,10 +199,8 @@ join pubkeys on
   (pubkeys.userid = users.id), to_tsquery($1) q
   WHERE tsv @@ q
   ORDER BY rank DESC
-  LIMIT $2) AS foo
-
-;
-		`, query, limit)
+  LIMIT $2) AS foo;
+`, query, limit)
 	if err != nil {
 		return nil, err
 	}
