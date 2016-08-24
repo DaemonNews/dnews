@@ -20,11 +20,12 @@ var store = sessions.NewCookieStore([]byte("something-very-secret"))
 var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
 type response struct {
-	Error    string
-	User     interface{}
-	Articles *dnews.Articles
-	Article  *dnews.Article
-	CSRF     map[string]interface{}
+	Error string
+	User  interface{}
+	//Articles *dnews.Articles
+	//Article  *dnews.Article
+	Data interface{}
+	CSRF map[string]interface{}
 }
 
 var funcMap = template.FuncMap{
@@ -103,7 +104,7 @@ func main() {
 			return
 		}
 
-		data.Articles = &a
+		data.Data = &a
 
 		renderTemplate(w, r, data, "search_results.html")
 	})
@@ -174,7 +175,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data.Article = article
+		data.Data = article
 		renderTemplate(w, r, data, "article.html")
 
 	})
@@ -252,6 +253,14 @@ func main() {
 			return
 		}
 
+		bugs, err := dnews.GetBugs()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data.Data = &bugs
+
 		renderTemplate(w, r, data, "advocacy.html")
 	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +276,7 @@ func main() {
 			return
 		}
 
-		data.Articles = &a
+		data.Data = &a
 		renderTemplate(w, r, data, "index.html")
 	})
 	http.Handle("/", router)
