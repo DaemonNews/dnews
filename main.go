@@ -27,6 +27,9 @@ type response struct {
 
 var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
+	"printSig": func(b []byte) string {
+		return string(b)
+	},
 	"printHTML": func(b []byte) template.HTML {
 		return template.HTML(string(b))
 	},
