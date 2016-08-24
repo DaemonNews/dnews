@@ -38,7 +38,8 @@ create table users (
 	lname text,
 	email text,
 	hash text,
-	username text unique not null
+	username text unique not null,
+	admin bool default false not null
 );
 
 create table pubkeys (
