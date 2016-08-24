@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/DaemonNews/dnews/src"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/feeds"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/DaemonNews/dnews/src"
 )
 
 // TODO change this secret
