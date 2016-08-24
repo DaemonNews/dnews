@@ -1,5 +1,5 @@
-hash: 10f11910aabeaa6c6707607c9127ebab796f21060f4bcec918a498cfb4a0fc36
-updated: 2016-08-20T12:51:26.960138747-06:00
+hash: 932684a697d14d21c5bf2a7d2fdfdbd9e2a5fba063ea2efd3c51f7a60a7718e6
+updated: 2016-08-24T08:42:32.832902786-06:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
@@ -13,10 +13,12 @@ imports:
   version: c493ab32499badf2c2de3e97cef50a5f3c0c778e
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/csrf
+  version: 50eb875b7d37289a5819742f0d60fa5c890fced9
 - name: github.com/gorilla/feeds
   version: 441264de03a8117ed530ae8e049d8f601a33a099
 - name: github.com/gorilla/mux
-  version: cf79e51a62d8219d52060dfc1b4e810414ba2d15
+  version: 674ef1c28022f33fa7200f59db45e604557f0380
 - name: github.com/gorilla/securecookie
   version: c13558c2b1c44da35e0eb043053609a5ba3a1f19
 - name: github.com/gorilla/sessions
@@ -27,6 +29,8 @@ imports:
   - oid
 - name: github.com/microcosm-cc/bluemonday
   version: 9dc199233bf72cc1aad9b61f73daf2f0075b9ee4
+- name: github.com/pkg/errors
+  version: 17b591df37844cde689f4d5813e5cea0927d8dd2
 - name: github.com/qbit/pgenv
   version: 64ee9b68f79a5694f6dee5f968126c3b8cc1bf98
 - name: github.com/russross/blackfriday

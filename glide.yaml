@@ -1,3 +1,5 @@
 package: dnews
 import:
 - package: github.com/ebfe/signify
+- package: github.com/gorilla/csrf
+  version: ~1.4.0
