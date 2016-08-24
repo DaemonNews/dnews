@@ -5,6 +5,17 @@
   <hr />
   <h4>Conferences</h4>
   <h4>User Groups</h4>
+    <table id="bugs">
+      <thead>
+        <tr><td>Name</td><th>Description</th></tr>
+      </thead>
+{{ range .Data }}
+      <tr>
+        <td><a href="{{ .URL }}">{{ .Name }}</a></td>
+        <td>{{ .Descr }}</td>
+      </tr>
+{{ end }}
+    </table>
   <h4>Uses</h4>
   <h4>Where to acquire</h4>
 </div>

@@ -56,6 +56,28 @@ where
 	return &a, nil
 }
 
+// GetBugs grabs all the bugs in the db
+func GetBugs() (*Bugs, error) {
+	var bs = Bugs{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query(`select * from bugs`)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var b = Bug{}
+		rows.Scan(&b.ID, &b.Created, &b.Name, &b.Descr, &b.URL)
+
+		bs = append(bs, &b)
+	}
+
+	return &bs, nil
+}
+
 // GetArticle returns the raw markdown for a given article
 func GetArticle(slug string) (*Article, error) {
 	var a = Article{}

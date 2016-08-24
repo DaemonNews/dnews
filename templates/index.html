@@ -1,7 +1,7 @@
 {{ template "header.html" . }}
 {{ template "nav.html" .User }}
 <div class="content threequarters">
-  {{ range .Articles }}
+  {{ range .Data }}
   <article>
     <div id="article_{{ .ID }}" class="">
       <header>
