@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/feeds"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/qbit/dnews/src"
+	"github.com/DaemonNews/dnews/src"
 )
 
 // TODO change this secret
