@@ -20,6 +20,9 @@ hr {
 .articlemeta {
 }
 
+.nav {
+  width: 20%;
+}
 .nav img {
   width: 100px;
 }
@@ -37,4 +40,12 @@ footer {
 
 h1 {
   font-size: 3.0em;
+}
+
+.frame {
+  border: 1px solid #ccc;
+}
+
+.lb {
+  padding-top: 10px;
 }

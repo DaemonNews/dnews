@@ -7,9 +7,10 @@
       <header>
 	<h3><a href="/article/{{ .ID }}">{{ .Title }}</a></h3>
       </header>
-      <div class="articlemeta">
+      <div class="articlemeta padded">
 	<div>By: <i>{{ .Author.FName }}</i> <{{ .Author.Email }}></div>
-	<div><time datetime="{{ .Date }}">{{ .Date | formatDate }}</time></div>
+	<div><time datetime="{{ .Date }}"><i>{{ .Date | formatDate }}</i></time></div>
+        {{ if .Signed }}
 	<div class="accordion">
 	  <input type="checkbox" id="verify{{ .ID }}">
 	  <label for="verify{{ .ID }}"><a>Verified Article</a></label>
@@ -19,14 +20,15 @@
 		Author's pubkey:<br />
 		<pre>{{ .Author.Pubkey }}</pre><br />
 		Article's signature:<br />
-		<pre>{{ .Signature }}</pre><br />
+		<pre>{{ .Signature | printSig }}</pre><br />
 		<a href="/article/raw/{{ .ID }}">Raw article</a>
 	      </div>
             </div>
 	  </div>
 	</div> 
+        {{ end }}
       </div>
-      <div class="article padded">
+      <div class="article">
 	{{ .Body | printHTML }}
       </div>
     </div>

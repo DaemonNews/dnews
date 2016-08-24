@@ -3,7 +3,7 @@
 <div class="content threequarters">
   {{ .Error }}
   <div class="padded">
-  <form action="/login" method="POST">
+  <form name="login" action="/login" method="POST">
     <div class="container">
       <label class="quarter right">User name:</label>
       <div class="half">
@@ -16,7 +16,9 @@
         <input type="password" class="fill" name="passwd">
       </div>
     </div>
-    <input type="submit" class="btn red rounded" value="LOGIN"/>
+    <div class="half right lb">
+      <input type="submit" class="btn red rounded" value="LOGIN"/>
+    </div>
   </form>
   </div>
 </div>

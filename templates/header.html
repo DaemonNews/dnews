@@ -14,14 +14,19 @@
     </style>
   </head>
   <body>
+<div class="padded max900 frame">
 <div class="fill middle">
-  <input class="fill rounded" placeholder="🔎 search here">
+  <form name="search" action="/search" method="POST">
+    <input name="search" class="fill rounded" placeholder="🔎 search dn">
+    <input type="submit" value="doit" class="hidden">
+  </form>
 </div>
-<div class="padded max900">
-{{ if .Authed }}
-<div class="user">Welcome, {{ .FName }}!</div>
-{{ else }}
-<div class="user">Welcome, anonymous!</div>
-{{ end }}
+  <div class="user right">
+  {{ if .Authed }}
+  <div class="user">Welcome, {{ .FName }}!</div>
+  {{ else }}
+  <div class="user">Welcome, anonymous!</div>
+  {{ end }}
+</div>
 <div class="container">
 
