@@ -149,7 +149,7 @@ func SearchArticles(query string, limit int) (Articles, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`SELECT id, published, title, ts_headline(body, q) as headline, rank
-		FROM (SELECT id, published, title, q, ts_rank_cd(tsv, q) AS rank
+		FROM (SELECT id, published, title, q, body, ts_rank_cd(tsv, q) AS rank
 			FROM articles, to_tsquery($1) q
 			WHERE tsv @@ q
 			ORDER BY rank DESC
@@ -164,7 +164,7 @@ func SearchArticles(query string, limit int) (Articles, error) {
 
 	for rows.Next() {
 		var a = Article{}
-		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Headline, &a.Author, &a.Rank)
+		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Headline, &a.Rank)
 		if err != nil {
 			return nil, err
 		}

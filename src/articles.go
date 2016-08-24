@@ -48,7 +48,7 @@ type Article struct {
 	Signed    bool
 	Signature []byte
 	Headline  string
-	Rank      int
+	Rank      float64
 	Tags      Tags
 }
 

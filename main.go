@@ -86,11 +86,22 @@ func main() {
 		renderTemplate(w, data, "ml.html")
 	})
 	r.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+		query := r.FormValue("search")
 		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// TODO sanatize!
+		a, err := dnews.SearchArticles(query, 100)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data.Articles = &a
+
 		renderTemplate(w, data, "search_results.html")
 	})
 
