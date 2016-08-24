@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/qbit/dnews/src"
@@ -22,6 +21,7 @@ func main() {
 	var sig = flag.String("sig", "", "Path to signature of article.")
 	//var htmlOut = flag.Bool("html", false, "Output in HTML")
 	var add = flag.Bool("a", false, "Add aticle to DB")
+	var live = flag.Bool("l", false, "Set article to be live")
 	flag.Parse()
 
 	if *mdFile == "" {
@@ -51,18 +51,15 @@ func main() {
 	}
 
 	fmt.Println("Signature OK")
+	a.Signed = *ok
+	a.Live = *live
 
 	if *add {
-		db, err := dnews.DBConnect()
+		id, err := dnews.InsertArticle(a)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
-		_, err = db.Query(`INSERT INTO articles (title, body, created, live) values ($1, $2, $3, true)`, a.Title, a.Body, a.Date)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("Added article!")
+		fmt.Printf("Added article! (%d)", id)
 	}
 }
