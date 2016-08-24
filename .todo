@@ -12,4 +12,10 @@
     <note priority="medium" time="1472078975">
         populate body of rss feed?
     </note>
+    <note priority="medium" time="1472079247">
+        flesh out admin ui
+    </note>
+    <note priority="low" time="1472079265">
+        build comment system
+    </note>
 </todo>
