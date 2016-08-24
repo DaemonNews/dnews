@@ -31,6 +31,10 @@ hr {
   padding-left: 50px;
 }
 
+.content .article ol {
+  padding-left: 50px;
+}
+
 .content .article ul li {
   list-style-type: disc;
 }
@@ -55,6 +59,10 @@ h3 {
   font-size: 1.6em;
 }
 
+h4 {
+  font-size: 1.4em;
+}
+
 .article h1 {
   font-size: 1.5em;
 }
@@ -71,4 +79,8 @@ h3 {
 
 .lb {
   padding-top: 10px;
+}
+
+.date {
+  overflow-wrap: normal;
 }

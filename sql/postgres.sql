@@ -113,3 +113,4 @@ insert into tags (tag) values ('FreeBSD');
 insert into tags (tag) values ('NetBSD');
 insert into tags (tag) values ('HardenedBSD');
 insert into tags (tag) values ('DragonflyBSD');
+insert into tags (tag) values ('Meta');

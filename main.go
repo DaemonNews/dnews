@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 
@@ -89,6 +88,14 @@ func main() {
 			return
 		}
 		renderTemplate(w, r, data, "ml.html")
+	})
+	router.HandleFunc("/archives", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, r, data, "archives.html")
 	})
 	router.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		query := r.FormValue("search")

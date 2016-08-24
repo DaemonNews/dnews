@@ -1,9 +1,48 @@
 {{ template "header.html" . }}
 {{ template "nav.html" .User }}
 <div class="content threequarters">
-  <h3>Mailing list</h3>
+  <h3>Mailing lists</h3>
   <hr />
-  <h4>announce@</h4>
+  <div class="article">
+       <b>announce@</b> this domain is currently the primary mailing list for <a href="https://daemon.news">daemon.news</a>!
+        <h4>Subscribing / Unsubscribing to a list:</h4>
+        <table border="0">
+            <tbody>
+                <tr >
+                    <th>Action</th>
+                    <th>Address</th>
+                    <th>Description</th>
+                </tr>
+                <tr >
+                    <td>Subscribe</td>
+                    <td>&lt;listname&gt;+subscribe@daemon.news</td>
+                    <td>Subscribes you to the specified &lt;listname&gt;.</td>
+                </tr>
+                <tr >
+                    <td>Subscribe Digest</td>
+                    <td>&lt;listname&gt;+subscribe-digest@daemon.news</td>
+                    <td>Subscribes you to the digest version of specified &lt;listname&gt;.</td>
+                </tr>
+                <tr >
+                    <td>Unsubscribe</td>
+                    <td>&lt;listname&gt;+unsubscribe@daemon.news</td>
+                    <td>Unsubscribes you from the specified &lt;listname&gt;.</td>
+                </tr>
+                <tr >
+                    <td>Help</td>
+                    <td>&lt;listname&gt;+help@daemon.news</td>
+                    <td>Sends you a brief email describing all the available mailing list commands.</td>
+                </tr>
+            </tbody>
+        </table>
+        <h4>List Netiquette</h4>
+        <ol>
+            <li >Don't be a jerk.</li>
+            <li >Ask well thought-out questions.</li>
+            <li >Bottom respond (some people still use things like <b>mutt</b> and <b>pine</b></li>
+            <li >Advertising is strictly prohibited unless it's for a sanctioned BSD event!</li>
+        </ol>
+   </div>
 </div>
 
 {{ template "footer.html" }}
