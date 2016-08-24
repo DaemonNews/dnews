@@ -27,9 +27,14 @@ hr {
   width: 100px;
 }
 
+.content .article ul {
+  padding-left: 50px;
+}
+
 .content .article ul li {
   list-style-type: disc;
 }
+
 .content .article ul li ul li {
   list-style-type: circle;
 }
@@ -39,7 +44,25 @@ footer {
 }
 
 h1 {
-  font-size: 3.0em;
+  font-size: 2.0em;
+}
+
+h2 {
+  font-size: 1.8em;
+}
+
+h3 {
+  font-size: 1.6em;
+}
+
+.article h1 {
+  font-size: 1.5em;
+}
+.article h2 {
+  font-size: 1.3em;
+}
+.article h3 {
+  font-size: 1.1em;
 }
 
 .frame {

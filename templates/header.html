@@ -16,14 +16,15 @@
   <body>
 <div class="padded max900 frame">
 <div class="fill middle">
-  <form name="search" action="/search" method="POST">
+  <form action="/search" method="POST" accept-charset="UTF-8">
     <input name="search" class="fill rounded" placeholder="🔎 search dn">
+    {{ .CSRF.csrfField }}
     <input type="submit" value="doit" class="hidden">
   </form>
 </div>
   <div class="user right">
-  {{ if .Authed }}
-  <div class="user">Welcome, {{ .FName }}!</div>
+  {{ if .User.Authed }}
+  <div class="user">Welcome, {{ .User.FName }}!</div>
   {{ else }}
   <div class="user">Welcome, anonymous!</div>
   {{ end }}

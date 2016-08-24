@@ -6,15 +6,16 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/feeds"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/qbit/dnews/src"
 )
 
+// TODO change this secret
 var store = sessions.NewCookieStore([]byte("something-very-secret"))
 var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
 
@@ -23,11 +24,12 @@ type response struct {
 	User     interface{}
 	Articles *dnews.Articles
 	Article  *dnews.Article
+	CSRF     map[string]interface{}
 }
 
 var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
-	"printSig": func(b []byte) string {
+	"printByte": func(b []byte) string {
 		return string(b)
 	},
 	"printHTML": func(b []byte) template.HTML {
@@ -39,7 +41,10 @@ func init() {
 	gob.Register(&dnews.User{})
 }
 
-func renderTemplate(w http.ResponseWriter, d *response, t string) {
+func renderTemplate(w http.ResponseWriter, r *http.Request, d *response, t string) {
+	d.CSRF = map[string]interface{}{
+		csrf.TemplateTag: csrf.TemplateField(r),
+	}
 	err = templ.ExecuteTemplate(w, t, d)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -66,33 +71,31 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 }
 
 func main() {
-	r := mux.NewRouter()
-	fs := http.FileServer(http.Dir("public"))
-	http.Handle("/public/", http.StripPrefix("/public/", fs))
-	r.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
+	router := mux.NewRouter()
+	router.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	router.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		renderTemplate(w, data, "feeds.html")
+		renderTemplate(w, r, data, "feeds.html")
 	})
-	r.HandleFunc("/ml", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/ml", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		renderTemplate(w, data, "ml.html")
+		renderTemplate(w, r, data, "ml.html")
 	})
-	r.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		query := r.FormValue("search")
 		data, err := grabUser(w, r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Can't get user: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
-
 		// TODO sanatize!
 		a, err := dnews.SearchArticles(query, 100)
 		if err != nil {
@@ -102,10 +105,10 @@ func main() {
 
 		data.Articles = &a
 
-		renderTemplate(w, data, "search_results.html")
+		renderTemplate(w, r, data, "search_results.html")
 	})
 
-	r.HandleFunc("/feed/{type}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/feed/{type}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		feedType := vars["type"]
 		now := time.Now()
@@ -123,13 +126,13 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// TODO populate items
+		// TODO populate body?
 		feed.Items = []*feeds.Item{}
 
 		for _, article := range a {
 			f := feeds.Item{}
 			f.Title = article.Title
-			f.Link = &feeds.Link{Href: fmt.Sprintf("http://daemon.news/article/%d", article.ID)}
+			f.Link = &feeds.Link{Href: fmt.Sprintf("http://daemon.news/article/%s", article.Slug)}
 			f.Author = &feeds.Author{Name: article.Author.FName, Email: article.Author.Email}
 			f.Created = article.Date
 
@@ -157,14 +160,11 @@ func main() {
 		}
 
 	})
-	r.HandleFunc("/article/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/article/{slug:[a-zA-Z0-9-]+}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id, err := strconv.Atoi(vars["id"])
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		article, err := dnews.GetArticle(id)
+		slug := vars["slug"]
+
+		article, err := dnews.GetArticle(slug)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -175,65 +175,63 @@ func main() {
 			return
 		}
 		data.Article = article
-		renderTemplate(w, data, "article.html")
+		renderTemplate(w, r, data, "article.html")
 
 	})
-	r.HandleFunc("/article/raw/{id:[0-9]+}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/article/raw/{slug:[a-zA-Z0-9-]+}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		id, err := strconv.Atoi(vars["id"])
+		slug := vars["slug"]
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		article, err := dnews.GetRawArticle(id)
+		article, err := dnews.GetRawArticle(slug)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		fmt.Fprintf(w, "%s", article.Body)
 	})
-	r.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/login/post", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		user := r.FormValue("user")
 		passwd := r.FormValue("passwd")
 
+		log.Println(user, passwd)
+
 		if user == "" && passwd == "" {
-			err = templ.ExecuteTemplate(w, "login.html", nil)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+			http.Redirect(w, r, "/", http.StatusFound)
 		} else {
-			// do auth
 			u, err := dnews.Auth(user, passwd)
+
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
 			if u.Authed {
 				session.Values["user"] = u
 				session.Save(r, w)
 				http.Redirect(w, r, "/", http.StatusFound)
-			} else {
-				log.Printf("Invalid user: %s", user)
-				err = templ.ExecuteTemplate(w, "login.html", struct {
-					Error string
-				}{
-					"Invalid User!",
-				})
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
 			}
 		}
 	})
-	r.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		renderTemplate(w, r, data, "login.html")
+	})
+	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -247,27 +245,20 @@ func main() {
 		http.Redirect(w, r, "/", http.StatusFound)
 
 	})
-	r.HandleFunc("/advocacy", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/advocacy", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		renderTemplate(w, data, "advocacy.html")
+		renderTemplate(w, r, data, "advocacy.html")
 	})
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		session, err := store.Get(r, "session-name")
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
-		}
-
-		val := session.Values["user"]
-		if _, ok := val.(*dnews.User); !ok {
-			val = &dnews.User{}
-			session.Values["user"] = &val
-			session.Save(r, w)
 		}
 
 		a, err := dnews.GetNArticles(10)
@@ -276,24 +267,14 @@ func main() {
 			return
 		}
 
-		data := struct {
-			Articles *dnews.Articles
-			// we did a type check above, but it would be nice to
-			// be able to use the actual type when sending to the
-			// templating stuffs :(
-			User interface{}
-		}{
-			&a,
-			&val,
-		}
-
-		err = templ.ExecuteTemplate(w, "index.html", data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		data.Articles = &a
+		renderTemplate(w, r, data, "index.html")
 	})
+	http.Handle("/", router)
 
-	http.Handle("/", r)
-	http.ListenAndServe(":8080", nil)
+	// TODO change this secret
+	http.ListenAndServe(":8080",
+		csrf.Protect([]byte("32-byte-long-auth-key"), csrf.Secure(false))(router))
+	//http.ListenAndServe(":8080", nil)
+
 }

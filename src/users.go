@@ -13,7 +13,7 @@ type User struct {
 	LName   string
 	FName   string
 	Email   string
-	Pubkey  string
+	Pubkey  []byte
 	User    string
 	Pass    string
 	Hash    string

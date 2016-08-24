@@ -1,26 +1,26 @@
-{{ template "header.html" .User }}
+{{ template "header.html" . }}
 {{ template "nav.html" .User }}
 <div class="content threequarters">
   <article>
-    <div id="article_{{ .Article.ID }}" class="article">
+    <div id="article_{{ .Article.Slug }}" class="">
       <header>
-	<h3>{{ .Article.Title }}</h3>
+	<h1>{{ .Article.Title }}</h1>
       </header>
       <div class="articlemeta">
 	<div>By: <i>{{ .Article.Author.FName }}</i> <{{ .Article.Author.Email }}></div>
 	<div><time datetime="{{ .Article.Date }}">{{ .Article.Date | formatDate }}</time></div>
-        {{ if .Signed }}
+        {{ if .Article.Signed }}
 	<div class="accordion">
-	  <input type="checkbox" id="verify{{ .Article.ID }}">
-	  <label for="verify{{ .Article.ID }}"><a>Verified Article</a></label>
+	  <input type="checkbox" id="verify{{ .Article.Slug }}">
+	  <label for="verify{{ .Article.Slug }}"><a>Verified Article</a></label>
 	  <div>
             <div class="padded white">
 	      <div class="siginfo">
 		Author's pubkey:<br />
-		<pre>{{ .Article.Author.Pubkey }}</pre><br />
+		<pre>{{ .Article.Author.Pubkey | printByte }}</pre><br />
 		Article's signature:<br />
-		<pre>{{ .Article.Signature | printSig }}</pre><br />
-		<a href="/article/raw/{{ .Article.ID }}">Raw article</a>
+		<pre>{{ .Article.Signature | printByte }}</pre><br />
+		<a href="/article/raw/{{ .Article.Slug }}">Raw article</a>
 	      </div>
             </div>
 	  </div>

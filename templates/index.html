@@ -1,11 +1,11 @@
-{{ template "header.html" .User }}
+{{ template "header.html" . }}
 {{ template "nav.html" .User }}
 <div class="content threequarters">
   {{ range .Articles }}
   <article>
-    <div id="article_{{ .ID }}" class="article">
+    <div id="article_{{ .ID }}" class="">
       <header>
-	<h3><a href="/article/{{ .ID }}">{{ .Title }}</a></h3>
+	<h1><a href="/article/{{ .Slug }}">{{ .Title }}</a></h1>
       </header>
       <div class="articlemeta padded">
 	<div>By: <i>{{ .Author.FName }}</i> <{{ .Author.Email }}></div>
@@ -18,10 +18,10 @@
             <div class="padded white">
 	      <div class="siginfo">
 		Author's pubkey:<br />
-		<pre>{{ .Author.Pubkey }}</pre><br />
+		<pre>{{ .Author.Pubkey | printByte }}</pre><br />
 		Article's signature:<br />
-		<pre>{{ .Signature | printSig }}</pre><br />
-		<a href="/article/raw/{{ .ID }}">Raw article</a>
+		<pre>{{ .Signature | printByte }}</pre><br />
+		<a href="/article/raw/{{ .Slug }}">Raw article</a>
 	      </div>
             </div>
 	  </div>

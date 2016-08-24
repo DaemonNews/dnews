@@ -34,7 +34,7 @@ func Auth(u string, p string) (*User, error) {
 }
 
 // GetRawArticle returns the raw markdown for a given article
-func GetRawArticle(id int) (*Article, error) {
+func GetRawArticle(slug string) (*Article, error) {
 	var a = Article{}
 	db, err := DBConnect()
 	if err != nil {
@@ -45,8 +45,8 @@ SELECT
  body
 from articles
 where
-  id = $1
-`, id).Scan(&a.Body)
+  slug = $1
+`, slug).Scan(&a.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ where
 }
 
 // GetArticle returns the raw markdown for a given article
-func GetArticle(id int) (*Article, error) {
+func GetArticle(slug string) (*Article, error) {
 	var a = Article{}
 	db, err := DBConnect()
 	if err != nil {
@@ -66,6 +66,7 @@ func GetArticle(id int) (*Article, error) {
 	err = db.QueryRow(`
 SELECT
  articles.id,
+ slug,
  published,
  title,
  body,
@@ -80,8 +81,8 @@ join users on
 join pubkeys on
   (pubkeys.userid = users.id)
 where
-  articles.id = $1
-`, id).Scan(&a.ID, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
+  articles.slug = $1
+`, slug).Scan(&a.ID, &a.Slug, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +104,7 @@ func GetNArticles(n int) (Articles, error) {
 	rows, err := db.Query(`
 SELECT
  articles.id,
+ slug,
  published,
  title,
  body,
@@ -130,10 +132,11 @@ limit $1
 
 	for rows.Next() {
 		var a = Article{}
-		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
+		err := rows.Scan(&a.ID, &a.Slug, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
 		if err != nil {
 			return nil, err
 		}
+		a.Verify(a.Author.Pubkey)
 		a.HTML()
 		as = append(as, &a)
 	}
@@ -148,12 +151,35 @@ func SearchArticles(query string, limit int) (Articles, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(`SELECT id, published, title, ts_headline(body, q) as headline, rank
-		FROM (SELECT id, published, title, q, body, ts_rank_cd(tsv, q) AS rank
-			FROM articles, to_tsquery($1) q
-			WHERE tsv @@ q
-			ORDER BY rank DESC
-			LIMIT $2) AS foo;
+	rows, err := db.Query(`
+SELECT
+ aid as id,
+ slug,
+ published,
+ title,
+ body,
+ key,
+ email,
+ fname,
+ lname,
+ sig,
+ ts_headline(body, q) as headline,
+ rank
+FROM (
+  SELECT
+    *,
+    articles.id as aid,
+    ts_rank_cd(tsv, q) as rank
+  FROM articles
+join users on
+  (articles.authorid = users.id)
+join pubkeys on
+  (pubkeys.userid = users.id), to_tsquery($1) q
+  WHERE tsv @@ q
+  ORDER BY rank DESC
+  LIMIT $2) AS foo
+
+;
 		`, query, limit)
 	if err != nil {
 		return nil, err
@@ -164,10 +190,14 @@ func SearchArticles(query string, limit int) (Articles, error) {
 
 	for rows.Next() {
 		var a = Article{}
-		err := rows.Scan(&a.ID, &a.Date, &a.Title, &a.Headline, &a.Rank)
+		err := rows.Scan(&a.ID, &a.Slug, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature, &a.Headline, &a.Rank)
 		if err != nil {
 			return nil, err
 		}
+
+		a.Verify(a.Author.Pubkey)
+		a.HTML()
+
 		as = append(as, &a)
 	}
 
@@ -196,7 +226,7 @@ func InsertArticle(a Article) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.QueryRow(`INSERT INTO articles (title, body, created, live) values ($1, $2, $3, true)`, a.Title, a.Body, a.Date).Scan(&id)
+	err = db.QueryRow(`INSERT INTO articles (title, body, created, live, sig) values ($1, $2, $3, $4, $5) returning id`, a.Title, a.Body, a.Date, a.Live, a.Signature).Scan(&id)
 	if err != nil {
 		return nil, err
 	}

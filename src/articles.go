@@ -41,13 +41,15 @@ type Tags []*Tag
 // Article is the base type for all articles
 type Article struct {
 	ID        int
+	Slug      string
+	Live      bool
 	Title     string
 	Date      time.Time
 	Body      []byte
 	Author    User
 	Signed    bool
 	Signature []byte
-	Headline  string
+	Headline  []byte
 	Rank      float64
 	Tags      Tags
 }
@@ -131,15 +133,16 @@ func (a *Article) LoadFromFile(p string) error {
 	return nil
 }
 
-// Sanatize the htmls
-func (a *Article) Sanatize() {
+// Sanitize the htmls
+func (a *Article) Sanitize() {
+	a.Headline = bluemonday.UGCPolicy().SanitizeBytes(a.Headline)
 	a.Body = bluemonday.UGCPolicy().SanitizeBytes(a.Body)
 }
 
 // HTML returns converted MD to HTML
 func (a *Article) HTML() {
 	a.Body = blackfriday.MarkdownCommon(a.Body)
-	a.Sanatize()
+	a.Sanitize()
 }
 
 // Articles represent a collection of a set of Article

@@ -35,6 +35,7 @@ create table pubkeys (
 
 create table articles (
 	id serial unique,
+	slug text not null,
 	created timestamp without time zone default now(),
 	edited timestamp without time zone default now(),
 	published timestamp without time zone default now(),
@@ -49,6 +50,18 @@ create table articles (
 create index articles_ts_idx on articles using gin (tsv);
 create index articles_title_trgm_idx ON articles using gin (title gin_trgm_ops);
 create index articles_body_trgm_idx ON articles using gin (body gin_trgm_ops);
+
+CREATE or replace FUNCTION article_slug_trigger() RETURNS trigger AS $$
+begin
+  new.slug :=
+      -- wait to replace the space so we can get readable slugs
+      lower(regexp_replace(regexp_replace(new.title, '[^a-zA-Z0-9 -]', '', 'g'), '\s', '-', 'g'));
+  return new;
+end
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER articlesligify BEFORE INSERT OR UPDATE
+    ON articles FOR EACH ROW EXECUTE PROCEDURE article_slug_trigger();
 
 CREATE or replace FUNCTION articles_ts_trigger() RETURNS trigger AS $$
 begin

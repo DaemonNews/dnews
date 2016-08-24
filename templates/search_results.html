@@ -1,33 +1,18 @@
-{{ template "header.html" .User }}
+{{ template "header.html" . }}
 {{ template "nav.html" .User }}
 <div class="content threequarters">
   {{ range .Articles }}
   <article>
-    <div id="article_{{ .ID }}" class="article">
+    <div id="article_{{ .Slug }}" class="">
       <header>
-	<h3><a href="/article/{{ .ID }}">{{ .Title }}</a></h3>
+	<h3><a href="/article/{{ .Slug }}">{{ .Title }}</a></h3>
       </header>
       <div class="articlemeta">
 	<div>By: <i>{{ .Author.FName }}</i> <{{ .Author.Email }}></div>
 	<div><time datetime="{{ .Date }}">{{ .Date | formatDate }}</time></div>
-	<div class="accordion">
-	  <input type="checkbox" id="verify{{ .ID }}">
-	  <label for="verify{{ .ID }}"><a>Verified Article</a></label>
-	  <div>
-            <div class="padded white">
-	      <div class="siginfo">
-		Author's pubkey:<br />
-		<pre>{{ .Author.Pubkey }}</pre><br />
-		Article's signature:<br />
-		<pre>{{ .Signature | printSig }}</pre><br />
-		<a href="/article/raw/{{ .ID }}">Raw article</a>
-	      </div>
-            </div>
-	  </div>
-	</div> 
       </div>
       <div class="article padded">
-	{{ .Body | printHTML }}
+	{{ .Headline | printHTML }}
       </div>
     </div>
     <hr />
