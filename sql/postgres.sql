@@ -1,9 +1,24 @@
+drop table if exists bugs;
 drop table if exists tags;
 drop table if exists article_tags;
 drop table if exists pubkeys cascade;
 drop table if exists users cascade;
 drop table if exists articles cascade;
 drop table if exists comments;
+
+create table bugs (
+	id serial unique,
+	created timestamp without time zone default now(),
+	name text not null,
+	descr text not null,
+	url text not null
+);
+
+insert into bugs (name, descr, url) values ('Colorado BSD Users Group', '*BSD user group in colerful Colorado!', 'https://cobug.org');
+insert into bugs (name, descr, url) values ('New York City BSD User Group', 'NYC*BUG (pronounced "nice bug") is the *BSD user group serving the metropolitan NYC area!', 'https://www.nycbug.org/');
+insert into bugs (name, descr, url) values ('Capital District BSD User Group', 'Capital District *BSD User Group serving the NY Captial District (Albany, Troy, Schenectedy) area!', 'https://cdbug.org');
+insert into bugs (name, descr, url) values ('Knoxville BSD User Group', 'Knoxville BSD User Group serving Knoxville TN and the surrounding areas!', 'https://knoxbug.org');
+insert into bugs (name, descr, url) values ('Chicago BSD User Group', 'Chicago BSD User Group serving the Chicago area!', 'https://chibug.org');
 
 create table tags (
 	id serial unique,
