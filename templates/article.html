@@ -8,7 +8,7 @@
       </header>
       <div class="articlemeta">
         <div class="tags">{{ .Data.Tags | joinTags }}</div>
-	<div>By: <i>{{ .Data.Author.FName }}</i> <{{ .Data.Author.Email }}></div>
+        <div>By: <i><a href="mailto:{{ .Author.Email }}">{{ .Author.FName }} {{ .Author.LName }}</a></i></div>
 	<div><time datetime="{{ .Data.Date }}">{{ .Data.Date | formatDate }}</time></div>
         {{ if .Data.Signed }}
 	<div class="accordion">
