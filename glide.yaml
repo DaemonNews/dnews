@@ -11,3 +11,5 @@ import:
 - package: github.com/microcosm-cc/bluemonday
 - package: github.com/russross/blackfriday
   version: ~1.4.0
+- package: github.com/gorilla/handlers
+  version: ~1.1.0
