@@ -1,5 +1,5 @@
-hash: 932684a697d14d21c5bf2a7d2fdfdbd9e2a5fba063ea2efd3c51f7a60a7718e6
-updated: 2016-08-24T08:42:32.832902786-06:00
+hash: fc561d71c94496fb1f89faa146fdd8b9942474869deb28204a0c0c31d2113443
+updated: 2016-08-25T07:58:20.347135825-06:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
@@ -18,7 +18,7 @@ imports:
 - name: github.com/gorilla/feeds
   version: 441264de03a8117ed530ae8e049d8f601a33a099
 - name: github.com/gorilla/mux
-  version: 674ef1c28022f33fa7200f59db45e604557f0380
+  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/gorilla/securecookie
   version: c13558c2b1c44da35e0eb043053609a5ba3a1f19
 - name: github.com/gorilla/sessions
@@ -34,7 +34,7 @@ imports:
 - name: github.com/qbit/pgenv
   version: 64ee9b68f79a5694f6dee5f968126c3b8cc1bf98
 - name: github.com/russross/blackfriday
-  version: 93622da34e54fb6529bfb7c57e710f37a8d9cbd8
+  version: 0b647d0506a698cca42caca173e55559b12a69f2
 - name: github.com/shurcooL/sanitized_anchor_name
   version: 10ef21a441db47d8b13ebcc5fd2310f636973c77
 - name: golang.org/x/net
