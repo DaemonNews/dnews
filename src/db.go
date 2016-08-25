@@ -196,7 +196,7 @@ FROM (
 join users on
   (articles.authorid = users.id)
 join pubkeys on
-  (pubkeys.userid = users.id), to_tsquery($1) q
+  (pubkeys.userid = users.id), plainto_tsquery($1) q
   WHERE tsv @@ q
   ORDER BY rank DESC
   LIMIT $2) AS foo;
