@@ -107,7 +107,8 @@ create or replace function hash(pass text) returns text as $$
 $$ language sql;
 
 insert into users (fname, lname, username, hash) values ('Charlie', 'Root', 'root', hash('omgSnakes'));
-insert into pubkeys (userid, key) values (1, 'untrusted comment: signify public key
+insert into users (fname, lname, username, hash, email) values ('Aaron', 'Bieber', 'aaron', hash('omgSnakes'), 'aaron@daemon.news');
+insert into pubkeys (userid, key) values (2, 'untrusted comment: signify public key
 RWSYzBxZQY5obtJcBPKBQHzy6EpyV/D5VpDB58f1Hrn4NqaC1Jo2fSz9');
 insert into tags (name) values ('OpenBSD');
 insert into tags (name) values ('FreeBSD');

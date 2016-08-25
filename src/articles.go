@@ -47,6 +47,7 @@ type Article struct {
 	Date      time.Time
 	Body      []byte
 	Author    User
+	AuthorID  int
 	Signed    bool
 	Signature []byte
 	Headline  []byte

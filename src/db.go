@@ -2,6 +2,7 @@ package dnews
 
 import (
 	"database/sql"
+	"fmt"
 
 	// postgresql
 	"github.com/lib/pq"
@@ -35,6 +36,7 @@ func Auth(u string, p string) (*User, error) {
 
 // GetRawArticle returns the raw markdown for a given article
 func GetRawArticle(slug string) (*Article, error) {
+
 	var a = Article{}
 	db, err := DBConnect()
 	if err != nil {
@@ -177,9 +179,16 @@ func GetTags(id int, db *sql.DB) (Tags, error) {
 	return ts, nil
 }
 
-// GetUserByEmail takes a users email and returns a User that is associated with it
-func GetUserByEmail(e string, db *sql.DB) (user User, err error) {
-	return user, nil
+// GetUserIDByEmail takes a users email and returns a User that is associated with it
+func GetUserIDByEmail(e string, db *sql.DB) (id *int, err error) {
+	err = db.QueryRow(`
+select id from users where email = $1
+`, e).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+
+	return id, nil
 }
 
 // GetArticlesByTag tags a tag and returns all the matching articles
@@ -376,7 +385,20 @@ func InsertArticle(a Article) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.QueryRow(`INSERT INTO articles (title, body, created, live, sig) values ($1, $2, $3, $4, $5) returning id`, a.Title, a.Body, a.Date, a.Live, a.Signature).Scan(&id)
+
+	uid, err := AssignUser(a.Author.Email, db)
+	if err != nil {
+		return nil, err
+	}
+
+	a.AuthorID = *uid
+
+	fmt.Printf("AuthorID: %d\n", a.AuthorID)
+
+	err = db.QueryRow(`INSERT INTO articles (title, body, created, live, sig, authorid) values ($1, $2, $3, $4, $5, $6) returning id`, a.Title, a.Body, a.Date, a.Live, a.Signature, a.AuthorID).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
 
 	a.ID = id
 
@@ -389,13 +411,19 @@ func InsertArticle(a Article) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &id, nil
 }
 
 // AssignUser takes a article (with user already assigned), gets the ID of said user from the db, and creates
 // the association assuming the user exists in the db.
-func AssignUser(id int, db *sql.DB) error {
-	return nil
+func AssignUser(e string, db *sql.DB) (*int, error) {
+	uid, err := GetUserIDByEmail(e, db)
+	if err != nil {
+		return nil, err
+	}
+
+	return uid, nil
 }
 
 // AssignTags takes a set of tag ids and an article id and creates the association in the article_tags table
