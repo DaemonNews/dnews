@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/DaemonNews/dnews/src"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/feeds"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -72,6 +74,7 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 
 func main() {
 	router := mux.NewRouter()
+
 	router.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 	router.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
@@ -284,11 +287,9 @@ func main() {
 		data.Data = &a
 		renderTemplate(w, r, data, "index.html")
 	})
-	http.Handle("/", router)
+
+	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 
 	// TODO change this secret
-	http.ListenAndServe(":8080",
-		csrf.Protect([]byte("32-byte-long-auth-key"), csrf.Secure(false))(router))
-	//http.ListenAndServe(":8080", nil)
-
+	http.ListenAndServe(":8080", csrf.Protect([]byte("32-byte-long-auth-key"), csrf.Secure(false))(loggedRouter))
 }
