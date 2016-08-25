@@ -82,5 +82,5 @@ h4 {
 }
 
 .date {
-  overflow-wrap: normal;
+  width: 180px;
 }
