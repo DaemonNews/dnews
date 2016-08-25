@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	// postgresql
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 	"github.com/qbit/pgenv"
 )
 
@@ -109,6 +109,12 @@ where
 		return nil, err
 	}
 
+	t, err := GetTags(a.ID, db)
+	if err != nil {
+		return nil, err
+	}
+
+	a.Tags = t
 	a.HTML()
 
 	defer db.Close()
@@ -116,22 +122,49 @@ where
 	return &a, nil
 }
 
+// GetTagIDS takes a list of tag names and returns a set of tag ids
+func GetTagIDS(s []string, db *sql.DB) (tagIDS []int, err error) {
+	sql := `
+select
+  id
+from tags
+where
+  name = ANY($1)
+`
+	rows, err := db.Query(sql, pq.Array(s))
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var i int
+		rows.Scan(&i)
+		tagIDS = append(tagIDS, i)
+	}
+
+	return tagIDS, nil
+}
+
 // GetTags returns tags for a given article
 func GetTags(id int, db *sql.DB) (Tags, error) {
 	var ts = Tags{}
 	rows, err := db.Query(`
-select
- tags.id,
- tags.name
-from article_tags
-join tags on
-  (article_tags.tagid = tags.id)
-where
-  articleid = $1
-`, id)
+		select
+		tags.id,
+		tags.name
+		from article_tags
+		join tags on
+		(article_tags.tagid = tags.id)
+		where
+		articleid = $1
+		`, id)
 	if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	for rows.Next() {
 		var t = Tag{}
@@ -144,6 +177,11 @@ where
 	return ts, nil
 }
 
+// GetUserByEmail takes a users email and returns a User that is associated with it
+func GetUserByEmail(e string, db *sql.DB) (user User, err error) {
+	return user, nil
+}
+
 // GetArticlesByTag tags a tag and returns all the matching articles
 func GetArticlesByTag(t string) (Articles, error) {
 	var as = Articles{}
@@ -152,31 +190,31 @@ func GetArticlesByTag(t string) (Articles, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`
-SELECT
- articles.id,
- slug,
- published,
- title,
- body,
- key,
- email,
- fname,
- lname,
- sig
-from articles
-join users on
-  (articles.authorid = users.id)
-join pubkeys on
-  (pubkeys.userid = users.id)
-join article_tags on
-  (article_tags.articleid = articles.id)
-join tags on
-  (article_tags.tagid = tags.id)
-where
-  live = true and
-  tags.name = $1
-order by published desc
-`, t)
+		SELECT
+		articles.id,
+		slug,
+		published,
+		title,
+		body,
+		key,
+		email,
+		fname,
+		lname,
+		sig
+		from articles
+		join users on
+		(articles.authorid = users.id)
+		join pubkeys on
+		(pubkeys.userid = users.id)
+		join article_tags on
+		(article_tags.articleid = articles.id)
+		join tags on
+		(article_tags.tagid = tags.id)
+		where
+		live = true and
+		tags.name = $1
+		order by published desc
+		`, t)
 	if err != nil {
 		return nil, err
 	}
@@ -211,27 +249,27 @@ func GetNArticles(n int) (Articles, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`
-SELECT
- articles.id,
- slug,
- published,
- title,
- body,
- key,
- email,
- fname,
- lname,
- sig
-from articles
-join users on
-  (articles.authorid = users.id)
-join pubkeys on
-  (pubkeys.userid = users.id)
-where
-  live = true
-order by published desc
-limit $1
-`, n)
+		SELECT
+		articles.id,
+		slug,
+		published,
+		title,
+		body,
+		key,
+		email,
+		fname,
+		lname,
+		sig
+		from articles
+		join users on
+		(articles.authorid = users.id)
+		join pubkeys on
+		(pubkeys.userid = users.id)
+		where
+		live = true
+		order by published desc
+		limit $1
+		`, n)
 	if err != nil {
 		return nil, err
 	}
@@ -266,33 +304,33 @@ func SearchArticles(query string, limit int) (Articles, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`
-SELECT
- aid as id,
- slug,
- published,
- title,
- body,
- key,
- email,
- fname,
- lname,
- sig,
- ts_headline(body, q) as headline,
- rank
-FROM (
-  SELECT
-    *,
-    articles.id as aid,
-    ts_rank_cd(tsv, q) as rank
-  FROM articles
-join users on
-  (articles.authorid = users.id)
-join pubkeys on
-  (pubkeys.userid = users.id), plainto_tsquery($1) q
-  WHERE tsv @@ q
-  ORDER BY rank DESC
-  LIMIT $2) AS foo;
-`, query, limit)
+		SELECT
+		aid as id,
+		slug,
+		published,
+		title,
+		body,
+		key,
+		email,
+		fname,
+		lname,
+		sig,
+		ts_headline(body, q) as headline,
+		rank
+		FROM (
+			SELECT
+			*,
+			articles.id as aid,
+			ts_rank_cd(tsv, q) as rank
+			FROM articles
+			join users on
+			(articles.authorid = users.id)
+			join pubkeys on
+			(pubkeys.userid = users.id), plainto_tsquery($1) q
+			WHERE tsv @@ q
+			ORDER BY rank DESC
+			LIMIT $2) AS foo;
+		`, query, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -339,8 +377,59 @@ func InsertArticle(a Article) (*int, error) {
 		return nil, err
 	}
 	err = db.QueryRow(`INSERT INTO articles (title, body, created, live, sig) values ($1, $2, $3, $4, $5) returning id`, a.Title, a.Body, a.Date, a.Live, a.Signature).Scan(&id)
+
+	a.ID = id
+
+	tags, err := GetTagIDS(a.Tags.Join(), db)
+	if err != nil {
+		return nil, err
+	}
+
+	err = AssignTags(tags, a.ID, db)
 	if err != nil {
 		return nil, err
 	}
 	return &id, nil
+}
+
+// AssignUser takes a article (with user already assigned), gets the ID of said user from the db, and creates
+// the association assuming the user exists in the db.
+func AssignUser(id int, db *sql.DB) error {
+	return nil
+}
+
+// AssignTags takes a set of tag ids and an article id and creates the association in the article_tags table
+func AssignTags(ts []int, id int, db *sql.DB) error {
+	txn, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	stmt, err := txn.Prepare(pq.CopyIn("article_tags", "articleid", "tagid"))
+	if err != nil {
+		return err
+	}
+
+	for _, tid := range ts {
+		_, err = stmt.Exec(id, tid)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
