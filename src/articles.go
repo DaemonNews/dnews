@@ -55,12 +55,16 @@ type Article struct {
 }
 
 // Join returns a concat'd string of Tag names
-func (t *Tags) Join() string {
+func (t *Tags) Join() []string {
 	var s []string
 	for _, t := range *t {
 		s = append(s, t.Name)
 	}
-	return strings.Join(s, ", ")
+	return s
+}
+
+func (t *Tags) String() string {
+	return strings.Join(t.Join(), ", ")
 }
 
 // Verify validates the signature of an article
