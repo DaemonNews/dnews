@@ -30,10 +30,8 @@ var listen string
 type response struct {
 	Error string
 	User  interface{}
-	//Articles *dnews.Articles
-	//Article  *dnews.Article
-	Data interface{}
-	CSRF map[string]interface{}
+	Data  interface{}
+	CSRF  map[string]interface{}
 }
 
 var funcMap = template.FuncMap{
