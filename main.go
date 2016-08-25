@@ -25,6 +25,7 @@ var cookieSecret string
 var crsfSecret string
 var templ *template.Template
 var store *sessions.CookieStore
+var listen string
 
 type response struct {
 	Error string
@@ -58,6 +59,7 @@ func init() {
 	flag.BoolVar(&insecure, "i", false, "Insecure mode")
 	flag.StringVar(&cookieSecret, "cookie", "something-very-secret", "Secret to use for cookie store")
 	flag.StringVar(&crsfSecret, "crsf", "32-byte-long-auth-key", "Secret to use for cookie store")
+	flag.StringVar(&listen, "http", ":8080", "Listen on")
 
 	flag.Parse()
 
@@ -336,11 +338,11 @@ func main() {
 
 	// TODO change this secret
 	if insecure {
-		log.Fatal(http.ListenAndServe(":8080",
+		log.Fatal(http.ListenAndServe(listen,
 			csrf.Protect([]byte("32-byte-long-auth-key"),
 				csrf.Secure(false))(loggedRouter)))
 	} else {
-		log.Fatal(http.ListenAndServe(":8080",
+		log.Fatal(http.ListenAndServe(listen,
 			csrf.Protect([]byte(crsfSecret))(loggedRouter)))
 
 	}
