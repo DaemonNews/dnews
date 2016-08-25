@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"html/template"
 	"log"
@@ -19,8 +20,11 @@ import (
 )
 
 // TODO change this secret
-var store = sessions.NewCookieStore([]byte("something-very-secret"))
-var templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
+var insecure bool
+var cookieSecret string
+var crsfSecret string
+var templ *template.Template
+var store *sessions.CookieStore
 
 type response struct {
 	Error string
@@ -50,6 +54,19 @@ var funcMap = template.FuncMap{
 }
 
 func init() {
+	var err error
+	flag.BoolVar(&insecure, "i", false, "Insecure mode")
+	flag.StringVar(&cookieSecret, "cookie", "something-very-secret", "Secret to use for cookie store")
+	flag.StringVar(&crsfSecret, "crsf", "32-byte-long-auth-key", "Secret to use for cookie store")
+
+	flag.Parse()
+
+	store = sessions.NewCookieStore([]byte(cookieSecret))
+	templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	gob.Register(&dnews.User{})
 }
 
@@ -57,7 +74,7 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, d *response, t strin
 	d.CSRF = map[string]interface{}{
 		csrf.TemplateTag: csrf.TemplateField(r),
 	}
-	err = templ.ExecuteTemplate(w, t, d)
+	err := templ.ExecuteTemplate(w, t, d)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -83,8 +100,8 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 }
 
 func main() {
-	router := mux.NewRouter()
 
+	router := mux.NewRouter()
 	router.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 
 	router.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
@@ -223,10 +240,6 @@ func main() {
 	router.HandleFunc("/article/raw/{slug:[a-zA-Z0-9-]+}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		slug := vars["slug"]
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 
 		article, err := dnews.GetRawArticle(slug)
 		if err != nil {
@@ -322,7 +335,13 @@ func main() {
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 
 	// TODO change this secret
-	log.Fatal(http.ListenAndServe(":8080",
-		csrf.Protect([]byte("32-byte-long-auth-key"),
-			csrf.Secure(false))(loggedRouter)))
+	if insecure {
+		log.Fatal(http.ListenAndServe(":8080",
+			csrf.Protect([]byte("32-byte-long-auth-key"),
+				csrf.Secure(false))(loggedRouter)))
+	} else {
+		log.Fatal(http.ListenAndServe(":8080",
+			csrf.Protect([]byte(crsfSecret))(loggedRouter)))
+
+	}
 }
