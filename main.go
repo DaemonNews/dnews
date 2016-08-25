@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -291,5 +292,7 @@ func main() {
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 
 	// TODO change this secret
-	http.ListenAndServe(":8080", csrf.Protect([]byte("32-byte-long-auth-key"), csrf.Secure(false))(loggedRouter))
+	log.Fatal(http.ListenAndServe(":8080",
+		csrf.Protect([]byte("32-byte-long-auth-key"),
+			csrf.Secure(false))(loggedRouter)))
 }
