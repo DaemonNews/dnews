@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/qbit/dnews/src"
+	"github.com/DaemonNews/dnews/src"
 )
 
 func insertMD(db *sql.DB, a *dnews.Article) (int, error) {
