@@ -8,6 +8,7 @@
 	<h1><a href="/article/{{ .Slug }}">{{ .Title }}</a></h1>
       </header>
       <div class="articlemeta padded">
+        <div class="tags">{{ .Tags | joinTags }}</div>
 	<div>By: <i>{{ .Author.FName }}</i> <{{ .Author.Email }}></div>
 	<div><time datetime="{{ .Date }}"><i>{{ .Date | formatDate }}</i></time></div>
         {{ if .Signed }}

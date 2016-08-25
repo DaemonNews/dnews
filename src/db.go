@@ -116,6 +116,93 @@ where
 	return &a, nil
 }
 
+// GetTags returns tags for a given article
+func GetTags(id int, db *sql.DB) (Tags, error) {
+	var ts = Tags{}
+	rows, err := db.Query(`
+select
+ tags.id,
+ tags.name
+from article_tags
+join tags on
+  (article_tags.tagid = tags.id)
+where
+  articleid = $1
+`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var t = Tag{}
+		err := rows.Scan(&t.ID, &t.Name)
+		if err != nil {
+			return nil, err
+		}
+		ts = append(ts, &t)
+	}
+	return ts, nil
+}
+
+// GetArticlesByTag tags a tag and returns all the matching articles
+func GetArticlesByTag(t string) (Articles, error) {
+	var as = Articles{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query(`
+SELECT
+ articles.id,
+ slug,
+ published,
+ title,
+ body,
+ key,
+ email,
+ fname,
+ lname,
+ sig
+from articles
+join users on
+  (articles.authorid = users.id)
+join pubkeys on
+  (pubkeys.userid = users.id)
+join article_tags on
+  (article_tags.articleid = articles.id)
+join tags on
+  (article_tags.tagid = tags.id)
+where
+  live = true and
+  tags.name = $1
+order by published desc
+`, t)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	defer db.Close()
+
+	for rows.Next() {
+		var a = Article{}
+		err := rows.Scan(&a.ID, &a.Slug, &a.Date, &a.Title, &a.Body, &a.Author.Pubkey, &a.Author.Email, &a.Author.FName, &a.Author.LName, &a.Signature)
+		if err != nil {
+			return nil, err
+		}
+		t, err := GetTags(a.ID, db)
+		if err != nil {
+			return nil, err
+		}
+		a.Tags = t
+		a.Verify(a.Author.Pubkey)
+		a.HTML()
+		as = append(as, &a)
+	}
+
+	return as, nil
+}
+
 // GetNArticles returns N most recent articles from the DB
 func GetNArticles(n int) (Articles, error) {
 	var as = Articles{}
@@ -158,6 +245,11 @@ limit $1
 		if err != nil {
 			return nil, err
 		}
+		t, err := GetTags(a.ID, db)
+		if err != nil {
+			return nil, err
+		}
+		a.Tags = t
 		a.Verify(a.Author.Pubkey)
 		a.HTML()
 		as = append(as, &a)

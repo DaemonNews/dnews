@@ -23,7 +23,7 @@ insert into bugs (name, descr, url) values ('Chicago BSD User Group', 'Chicago B
 create table tags (
 	id serial unique,
 	created timestamp without time zone default now(),
-	tag text
+	name text unique
 );
 
 create table article_tags (
@@ -109,9 +109,9 @@ $$ language sql;
 insert into users (fname, lname, username, hash) values ('Charlie', 'Root', 'root', hash('omgSnakes'));
 insert into pubkeys (userid, key) values (1, 'untrusted comment: signify public key
 RWSYzBxZQY5obtJcBPKBQHzy6EpyV/D5VpDB58f1Hrn4NqaC1Jo2fSz9');
-insert into tags (tag) values ('OpenBSD');
-insert into tags (tag) values ('FreeBSD');
-insert into tags (tag) values ('NetBSD');
-insert into tags (tag) values ('HardenedBSD');
-insert into tags (tag) values ('DragonflyBSD');
-insert into tags (tag) values ('Meta');
+insert into tags (name) values ('OpenBSD');
+insert into tags (name) values ('FreeBSD');
+insert into tags (name) values ('NetBSD');
+insert into tags (name) values ('HardenedBSD');
+insert into tags (name) values ('DragonflyBSD');
+insert into tags (name) values ('Meta');

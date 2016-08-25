@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/DaemonNews/dnews/src"
@@ -34,6 +35,14 @@ var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
 	"printByte": func(b []byte) string {
 		return string(b)
+	},
+	"joinTags": func(ts dnews.Tags) template.HTML {
+		var s []string
+		for _, t := range ts {
+
+			s = append(s, fmt.Sprintf(`<a href="/tag/%s">%s</a>`, t.Name, t.Name))
+		}
+		return template.HTML(strings.Join(s, ", "))
 	},
 	"printHTML": func(b []byte) template.HTML {
 		return template.HTML(string(b))
@@ -77,6 +86,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+
 	router.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
 		if err != nil {
@@ -170,6 +180,26 @@ func main() {
 			http.Error(w, "Invalid feed type!", http.StatusInternalServerError)
 			return
 		}
+
+	})
+	router.HandleFunc("/tag/{tag:[a-zA-Z0-9-]+}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tag := vars["tag"]
+
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		articles, err := dnews.GetArticlesByTag(tag)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data.Data = articles
+		renderTemplate(w, r, data, "index.html")
 
 	})
 	router.HandleFunc("/article/{slug:[a-zA-Z0-9-]+}", func(w http.ResponseWriter, r *http.Request) {
