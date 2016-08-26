@@ -24,7 +24,7 @@ func Auth(u string, p string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = db.QueryRow(`select id, created, fname, lname, email, username, (hash = crypt($1, hash)) as authed from users where username = $2`, p, u).Scan(&user.ID, &user.Created, &user.FName, &user.LName, &user.Email, &user.User, &user.Authed)
+	err = db.QueryRow(`select id, created, fname, lname, email, username, (hash = crypt($1, hash)) as authed, admin from users where username = $2`, p, u).Scan(&user.ID, &user.Created, &user.FName, &user.LName, &user.Email, &user.User, &user.Authed, &user.Admin)
 	if err != nil {
 		return nil, err
 	}
