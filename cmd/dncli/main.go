@@ -1,19 +1,12 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"os"
 
 	"github.com/DaemonNews/dnews/src"
 )
-
-func insertMD(db *sql.DB, a *dnews.Article) (int, error) {
-	var id int
-	err := db.QueryRow(`INSERT INTO articles (title, body) values ($1, $2) returning id`, a.Title, a.Body).Scan(&id)
-	return id, err
-}
 
 func main() {
 	var mdFile = flag.String("mdfile", "", "Path to markdown file to import.")
@@ -23,6 +16,8 @@ func main() {
 	var add = flag.Bool("a", false, "Add aticle to DB")
 	var live = flag.Bool("l", false, "Set article to be live")
 	flag.Parse()
+
+	db, err := dnews.DBConnect()
 
 	if *mdFile == "" {
 		fmt.Println("please specify file with -mdfile")
@@ -55,7 +50,7 @@ func main() {
 	a.Live = *live
 
 	if *add {
-		id, err := dnews.InsertArticle(a)
+		id, err := dnews.InsertArticle(db, a)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
