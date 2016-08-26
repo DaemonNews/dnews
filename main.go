@@ -105,11 +105,11 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 
 func main() {
 	db, err := dnews.DBConnect()
-	defer db.Close()
-
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
+
 	router := mux.NewRouter()
 	router.PathPrefix("/public/").Handler(
 		http.StripPrefix("/public/",
