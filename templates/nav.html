@@ -7,7 +7,9 @@
           <li><a href="/ml">Mailing List</a></li>
           <li><a href="/feeds">RSS / Atom</a></li>
 {{ if .Authed }}
+{{ if .Admin }}
           <li><a href="/admin">Admin</a></li>
+{{ end }}
           <li><a href="/logout">Log out</a></li>
 {{ else }}
           <li><a href="/login">Log in</a></li>
