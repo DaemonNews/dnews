@@ -89,7 +89,10 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 	}
 
 	uVal := session.Values["user"]
-	if _, ok := uVal.(*dnews.User); !ok {
+
+	var _, ok = uVal.(*dnews.User)
+
+	if !ok {
 		uVal = &dnews.User{}
 		session.Values["user"] = &uVal
 		session.Save(r, w)
@@ -101,9 +104,16 @@ func grabUser(w http.ResponseWriter, r *http.Request) (*response, error) {
 }
 
 func main() {
+	db, err := dnews.DBConnect()
+	defer db.Close()
 
+	if err != nil {
+		log.Fatal(err)
+	}
 	router := mux.NewRouter()
-	router.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	router.PathPrefix("/public/").Handler(
+		http.StripPrefix("/public/",
+			http.FileServer(http.Dir("public"))))
 
 	router.HandleFunc("/feeds", func(w http.ResponseWriter, r *http.Request) {
 		data, err := grabUser(w, r)
@@ -137,7 +147,7 @@ func main() {
 			return
 		}
 		// TODO sanatize!
-		a, err := dnews.SearchArticles(query, 100)
+		a, err := dnews.SearchArticles(db, query, 100)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -161,7 +171,7 @@ func main() {
 			Copyright:   "This work is copyright © Daemon.News",
 		}
 
-		a, err := dnews.GetNArticles(10)
+		a, err := dnews.GetNArticles(db, 10)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -210,7 +220,7 @@ func main() {
 			return
 		}
 
-		articles, err := dnews.GetArticlesByTag(tag)
+		articles, err := dnews.GetArticlesByTag(db, tag)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -224,7 +234,7 @@ func main() {
 		vars := mux.Vars(r)
 		slug := vars["slug"]
 
-		article, err := dnews.GetArticle(slug)
+		article, err := dnews.GetArticle(db, slug)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -242,7 +252,7 @@ func main() {
 		vars := mux.Vars(r)
 		slug := vars["slug"]
 
-		article, err := dnews.GetRawArticle(slug)
+		article, err := dnews.GetRawArticle(db, slug)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -262,7 +272,7 @@ func main() {
 		if user == "" && passwd == "" {
 			http.Redirect(w, r, "/", http.StatusFound)
 		} else {
-			u, err := dnews.Auth(user, passwd)
+			u, err := dnews.Auth(db, user, passwd)
 
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -286,33 +296,54 @@ func main() {
 		renderTemplate(w, r, data, "login.html")
 	})
 	router.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
-		data, err := grabUser(w, r)
+		session, err := store.Get(r, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		t, err := dnews.GetAllTags()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		uVal := session.Values["user"]
+		var u, ok = uVal.(*dnews.User)
+		if !ok {
+			uVal = &dnews.User{}
+			session.Values["user"] = &uVal
+			session.Save(r, w)
+		}
+
+		var data = &response{}
+		data.User = &u
+
+		if ok {
+			if u.Admin {
+				t, err := dnews.GetAllTags(db)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				us, err := dnews.GetAllUsers(db)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				data.Data = struct {
+					*dnews.Tags
+					*dnews.Users
+				}{
+					&t,
+					&us,
+				}
+
+				renderTemplate(w, r, data, "admin.html")
+			} else {
+				renderTemplate(w, r, data, "perm_denied.html")
+			}
+		} else {
+			http.Error(w, "Invalid User!", http.StatusInternalServerError)
 			return
 		}
 
-		u, err := dnews.GetAllUsers()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		data.Data = struct {
-			*dnews.Tags
-			*dnews.Users
-		}{
-			&t,
-			&u,
-		}
-
-		renderTemplate(w, r, data, "admin.html")
 	})
 	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
@@ -335,7 +366,7 @@ func main() {
 			return
 		}
 
-		bugs, err := dnews.GetBugs()
+		bugs, err := dnews.GetBugs(db)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -352,7 +383,7 @@ func main() {
 			return
 		}
 
-		a, err := dnews.GetNArticles(10)
+		a, err := dnews.GetNArticles(db, 10)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
