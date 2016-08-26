@@ -66,6 +66,10 @@ func GetBugs() (*Bugs, error) {
 		return nil, err
 	}
 	rows, err := db.Query(`select * from bugs`)
+
+	defer rows.Close()
+	defer db.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -418,6 +422,7 @@ func InsertUser(u User) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
 	err = db.QueryRow(`INSERT INTO users (fname, lname, email, username, hash) values ($1, $2, $3, (select hash($4)))`, u.FName, u.LName, u.Email, u.User, u.Pass).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -433,6 +438,8 @@ func InsertArticle(a Article) (*int, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer db.Close()
 
 	uid, err := AssignUser(a.Author.Email, db)
 	if err != nil {
