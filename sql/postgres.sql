@@ -8,7 +8,7 @@ drop table if exists comments;
 
 create table bugs (
 	id serial unique,
-	created timestamp without time zone default now(),
+	created timestamp with time zone default now(),
 	name text not null,
 	descr text not null,
 	url text not null
@@ -22,7 +22,7 @@ insert into bugs (name, descr, url) values ('Chicago BSD User Group', 'Chicago B
 
 create table tags (
 	id serial unique,
-	created timestamp without time zone default now(),
+	created timestamp with time zone default now(),
 	name text unique
 );
 
@@ -33,18 +33,18 @@ create table article_tags (
 
 create table users (
 	id serial unique,
-	created timestamp without time zone default now(),
-	fname text,
-	lname text,
-	email text,
-	hash text,
+	created timestamp with time zone default now(),
+	fname text not null,
+	lname text not null,
+	email text not null,
+	hash text not null,
 	username text unique not null,
 	admin bool default false not null
 );
 
 create table pubkeys (
 	id serial unique,
-	created timestamp without time zone default now(),
+	created timestamp with time zone default now(),
 	userid int references users (id) on delete cascade,
 	key text
 );
@@ -52,9 +52,9 @@ create table pubkeys (
 create table articles (
 	id serial unique,
 	slug text not null,
-	created timestamp without time zone default now(),
-	edited timestamp without time zone default now(),
-	published timestamp without time zone default now(),
+	created timestamp with time zone default now(),
+	edited timestamp with time zone default now(),
+	published timestamp with time zone default now(),
 	live bool default false,
 	authorid int references users (id),
 	title text not null,
@@ -94,7 +94,7 @@ CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
 
 create table comments (
 	id serial unique,
-	created timestamp without time zone default now(),
+	created timestamp with time zone default now(),
 	pid int default 0 references comments (id) on delete set default ,
 	pkid int references pubkeys (id),
 	userid int references users (id) on delete cascade,
@@ -106,7 +106,7 @@ create or replace function hash(pass text) returns text as $$
 	select crypt(pass, gen_salt('bf', 10));	
 $$ language sql;
 
-insert into users (fname, lname, username, hash) values ('Charlie', 'Root', 'root', hash('omgSnakes'));
+insert into users (fname, lname, username, hash, email) values ('Charlie', 'Root', 'root', hash('omgSnakes'), 'root@localhost');
 insert into users (fname, lname, username, hash, email) values ('Aaron', 'Bieber', 'aaron', hash('omgSnakes'), 'aaron@daemon.news');
 insert into pubkeys (userid, key) values (2, 'untrusted comment: signify public key
 RWSYzBxZQY5obtJcBPKBQHzy6EpyV/D5VpDB58f1Hrn4NqaC1Jo2fSz9');
