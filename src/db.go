@@ -18,31 +18,21 @@ func DBConnect() (*sql.DB, error) {
 }
 
 // Auth checks a user's username / password for login
-func Auth(u string, p string) (*User, error) {
+func Auth(db *sql.DB, u string, p string) (*User, error) {
 	var user = &User{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
-	err = db.QueryRow(`select id, created, fname, lname, email, username, (hash = crypt($1, hash)) as authed, admin from users where username = $2`, p, u).Scan(&user.ID, &user.Created, &user.FName, &user.LName, &user.Email, &user.User, &user.Authed, &user.Admin)
-	if err != nil {
-		return nil, err
-	}
 
-	defer db.Close()
+	err := db.QueryRow(`select id, created, fname, lname, email, username, (hash = crypt($1, hash)) as authed, admin from users where username = $2`, p, u).Scan(&user.ID, &user.Created, &user.FName, &user.LName, &user.Email, &user.User, &user.Authed, &user.Admin)
+	if err != nil {
+		return nil, err
+	}
 
 	return user, nil
 }
 
 // GetRawArticle returns the raw markdown for a given article
-func GetRawArticle(slug string) (*Article, error) {
-
+func GetRawArticle(db *sql.DB, slug string) (*Article, error) {
 	var a = Article{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
-	err = db.QueryRow(`
+	err := db.QueryRow(`
 SELECT
  body
 from articles
@@ -53,26 +43,18 @@ where
 		return nil, err
 	}
 
-	defer db.Close()
-
 	return &a, nil
 }
 
 // GetBugs grabs all the bugs in the db
-func GetBugs() (*Bugs, error) {
+func GetBugs(db *sql.DB) (*Bugs, error) {
 	var bs = Bugs{}
-	db, err := DBConnect()
+	rows, err := db.Query(`select * from bugs`)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(`select * from bugs`)
 
 	defer rows.Close()
-	defer db.Close()
-
-	if err != nil {
-		return nil, err
-	}
 
 	for rows.Next() {
 		var b = Bug{}
@@ -85,13 +67,9 @@ func GetBugs() (*Bugs, error) {
 }
 
 // GetArticle returns the raw markdown for a given article
-func GetArticle(slug string) (*Article, error) {
+func GetArticle(db *sql.DB, slug string) (*Article, error) {
 	var a = Article{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
-	err = db.QueryRow(`
+	err := db.QueryRow(`
 SELECT
  articles.id,
  slug,
@@ -115,7 +93,7 @@ where
 		return nil, err
 	}
 
-	t, err := GetTags(a.ID, db)
+	t, err := GetTags(db, a.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,13 +101,11 @@ where
 	a.Tags = t
 	a.HTML()
 
-	defer db.Close()
-
 	return &a, nil
 }
 
 // GetTagIDS takes a list of tag names and returns a set of tag ids
-func GetTagIDS(s []string, db *sql.DB) (tagIDS []int, err error) {
+func GetTagIDS(db *sql.DB, s []string) (tagIDS []int, err error) {
 	sql := `
 select
   id
@@ -154,16 +130,14 @@ where
 }
 
 // GetAllTags returns all the tags in the DB
-func GetAllTags() (Tags, error) {
+func GetAllTags(db *sql.DB) (Tags, error) {
 	var ts = Tags{}
-	db, err := DBConnect()
+	rows, err := db.Query(`select id, created, name from tags`)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(`select id, created, name from tags`)
 
 	defer rows.Close()
-	defer db.Close()
 
 	for rows.Next() {
 		var t = Tag{}
@@ -178,16 +152,15 @@ func GetAllTags() (Tags, error) {
 }
 
 // GetAllUsers gets all the users in the DB
-func GetAllUsers() (Users, error) {
+func GetAllUsers(db *sql.DB) (Users, error) {
 	var us = Users{}
-	db, err := DBConnect()
+
+	rows, err := db.Query(`select id, created, fname, lname, email, username, admin from users`)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query(`select id, created, fname, lname, email, username, admin from users`)
 
 	defer rows.Close()
-	defer db.Close()
 
 	for rows.Next() {
 		var u = User{}
@@ -202,7 +175,7 @@ func GetAllUsers() (Users, error) {
 }
 
 // GetTags returns tags for a given article
-func GetTags(id int, db *sql.DB) (Tags, error) {
+func GetTags(db *sql.DB, id int) (Tags, error) {
 	var ts = Tags{}
 	rows, err := db.Query(`
 		select
@@ -232,7 +205,7 @@ func GetTags(id int, db *sql.DB) (Tags, error) {
 }
 
 // GetUserIDByEmail takes a users email and returns a User that is associated with it
-func GetUserIDByEmail(e string, db *sql.DB) (id *int, err error) {
+func GetUserIDByEmail(db *sql.DB, e string) (id *int, err error) {
 	err = db.QueryRow(`
 select id from users where email = $1
 `, e).Scan(&id)
@@ -244,12 +217,8 @@ select id from users where email = $1
 }
 
 // GetArticlesByTag tags a tag and returns all the matching articles
-func GetArticlesByTag(t string) (Articles, error) {
+func GetArticlesByTag(db *sql.DB, t string) (Articles, error) {
 	var as = Articles{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
 	rows, err := db.Query(`
 		SELECT
 		articles.id,
@@ -281,7 +250,6 @@ func GetArticlesByTag(t string) (Articles, error) {
 	}
 
 	defer rows.Close()
-	defer db.Close()
 
 	for rows.Next() {
 		var a = Article{}
@@ -289,7 +257,7 @@ func GetArticlesByTag(t string) (Articles, error) {
 		if err != nil {
 			return nil, err
 		}
-		t, err := GetTags(a.ID, db)
+		t, err := GetTags(db, a.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -303,12 +271,9 @@ func GetArticlesByTag(t string) (Articles, error) {
 }
 
 // GetNArticles returns N most recent articles from the DB
-func GetNArticles(n int) (Articles, error) {
+func GetNArticles(db *sql.DB, n int) (Articles, error) {
 	var as = Articles{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
+
 	rows, err := db.Query(`
 		SELECT
 		articles.id,
@@ -336,7 +301,6 @@ func GetNArticles(n int) (Articles, error) {
 	}
 
 	defer rows.Close()
-	defer db.Close()
 
 	for rows.Next() {
 		var a = Article{}
@@ -344,7 +308,7 @@ func GetNArticles(n int) (Articles, error) {
 		if err != nil {
 			return nil, err
 		}
-		t, err := GetTags(a.ID, db)
+		t, err := GetTags(db, a.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -358,12 +322,8 @@ func GetNArticles(n int) (Articles, error) {
 }
 
 // SearchArticles uses pg's TS stuff to query all the articles for passed in values
-func SearchArticles(query string, limit int) (Articles, error) {
+func SearchArticles(db *sql.DB, query string, limit int) (Articles, error) {
 	var as = Articles{}
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
 	rows, err := db.Query(`
 		SELECT
 		aid as id,
@@ -397,7 +357,6 @@ func SearchArticles(query string, limit int) (Articles, error) {
 	}
 
 	defer rows.Close()
-	defer db.Close()
 
 	for rows.Next() {
 		var a = Article{}
@@ -416,14 +375,9 @@ func SearchArticles(query string, limit int) (Articles, error) {
 }
 
 // InsertUser takes a User and inserts them into the database
-func InsertUser(u User) (*int, error) {
+func InsertUser(db *sql.DB, u User) (*int, error) {
 	var id int
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-	err = db.QueryRow(`INSERT INTO users (fname, lname, email, username, hash) values ($1, $2, $3, (select hash($4)))`, u.FName, u.LName, u.Email, u.User, u.Pass).Scan(&id)
+	err := db.QueryRow(`INSERT INTO users (fname, lname, email, username, hash) values ($1, $2, $3, (select hash($4)))`, u.FName, u.LName, u.Email, u.User, u.Pass).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -432,16 +386,9 @@ func InsertUser(u User) (*int, error) {
 
 // InsertArticle takes an Article and inserts it into the db, it will verify the Author exists
 // prior to inserting
-func InsertArticle(a Article) (*int, error) {
+func InsertArticle(db *sql.DB, a Article) (*int, error) {
 	var id int
-	db, err := DBConnect()
-	if err != nil {
-		return nil, err
-	}
-
-	defer db.Close()
-
-	uid, err := AssignUser(a.Author.Email, db)
+	uid, err := AssignUser(db, a.Author.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -457,12 +404,12 @@ func InsertArticle(a Article) (*int, error) {
 
 	a.ID = id
 
-	tags, err := GetTagIDS(a.Tags.Join(), db)
+	tags, err := GetTagIDS(db, a.Tags.Join())
 	if err != nil {
 		return nil, err
 	}
 
-	err = AssignTags(tags, a.ID, db)
+	err = AssignTags(db, tags, a.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -472,8 +419,8 @@ func InsertArticle(a Article) (*int, error) {
 
 // AssignUser takes a article (with user already assigned), gets the ID of said user from the db, and creates
 // the association assuming the user exists in the db.
-func AssignUser(e string, db *sql.DB) (*int, error) {
-	uid, err := GetUserIDByEmail(e, db)
+func AssignUser(db *sql.DB, e string) (*int, error) {
+	uid, err := GetUserIDByEmail(db, e)
 	if err != nil {
 		return nil, err
 	}
@@ -482,7 +429,7 @@ func AssignUser(e string, db *sql.DB) (*int, error) {
 }
 
 // AssignTags takes a set of tag ids and an article id and creates the association in the article_tags table
-func AssignTags(ts []int, id int, db *sql.DB) error {
+func AssignTags(db *sql.DB, ts []int, id int) error {
 	txn, err := db.Begin()
 	if err != nil {
 		return err
