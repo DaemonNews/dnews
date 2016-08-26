@@ -3,6 +3,66 @@
 <div class="content threequarters">
   <h3>Admin</h3>
   <hr />
+  <h3>Articles</h3>
+  <h3>Users</h3>
+    <table>
+      <thead>
+        <tr>
+          <td>ID</td>
+          <td>User Name</td>
+          <td>Created</td>
+          <td>First</td>
+          <td>Last</td>
+          <td>Email</td>
+          <td>Admin</td>
+          <td>
+            <div class="add"><a href="">+</a></div>
+          </td>
+        </tr>
+      </thead>
+  {{ range .Data.Users }}
+      <tr>
+        <td>{{ .ID }}</td>
+        <td>{{ .User }}</td>
+        <td>{{ .Created | shortDate}}</td>
+        <td>{{ .FName }}</td>
+        <td>{{ .LName }}</td>
+        <td>{{ .Email }}</td>
+        <td>{{ .Admin }}</td>
+        <td>
+          <div class="remove">
+            <a href="/user/remove/{{ .ID }}">-</a>
+          </div>
+        </td>
+      </tr>
+  {{ end }}
+    </table>
+  <h3>Tags</h3>
+    <table>
+      <thead>
+        <tr>
+          <td>ID</td>
+          <td>Name</td>
+          <td>Created</td>
+          <td>
+            <div class="add"><a href="">+</a></div>
+          </td>
+        </tr>
+      </thead>
+  {{ range .Data.Tags }}
+      <tr>
+        <td>{{ .ID }}</td>
+        <td>{{ .Name }}</td>
+        <td>{{ .Created | shortDate }}</td>
+        <td>
+          <div class="remove">
+            <a href="/tag/remove/{{ .ID }}">-</a>
+          </div>
+        </td>
+      </tr>
+  {{ end }}
+    </table>
+  <h3>Bugs</h3>
 </div>
 
 {{ template "footer.html" }}

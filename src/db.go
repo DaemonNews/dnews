@@ -149,6 +149,54 @@ where
 	return tagIDS, nil
 }
 
+// GetAllTags returns all the tags in the DB
+func GetAllTags() (Tags, error) {
+	var ts = Tags{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query(`select id, created, name from tags`)
+
+	defer rows.Close()
+	defer db.Close()
+
+	for rows.Next() {
+		var t = Tag{}
+		err := rows.Scan(&t.ID, &t.Created, &t.Name)
+		if err != nil {
+			return nil, err
+		}
+		ts = append(ts, &t)
+	}
+
+	return ts, nil
+}
+
+// GetAllUsers gets all the users in the DB
+func GetAllUsers() (Users, error) {
+	var us = Users{}
+	db, err := DBConnect()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Query(`select id, created, fname, lname, email, username, admin from users`)
+
+	defer rows.Close()
+	defer db.Close()
+
+	for rows.Next() {
+		var u = User{}
+		err := rows.Scan(&u.ID, &u.Created, &u.FName, &u.LName, &u.Email, &u.User, &u.Admin)
+		if err != nil {
+			return nil, err
+		}
+		us = append(us, &u)
+	}
+
+	return us, nil
+}
+
 // GetTags returns tags for a given article
 func GetTags(id int, db *sql.DB) (Tags, error) {
 	var ts = Tags{}

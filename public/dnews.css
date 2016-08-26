@@ -85,3 +85,12 @@ h4 {
 .date {
   width: 180px;
 }
+
+.add {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+.remove {
+  font-size: 1.3em;
+  font-weight: bold;
+}

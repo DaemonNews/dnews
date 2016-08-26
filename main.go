@@ -36,6 +36,7 @@ type response struct {
 
 var funcMap = template.FuncMap{
 	"formatDate": dnews.FormatDate,
+	"shortDate":  dnews.ShortDate,
 	"printByte": func(b []byte) string {
 		return string(b)
 	},
@@ -283,6 +284,35 @@ func main() {
 		}
 
 		renderTemplate(w, r, data, "login.html")
+	})
+	router.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
+		data, err := grabUser(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		t, err := dnews.GetAllTags()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		u, err := dnews.GetAllUsers()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data.Data = struct {
+			*dnews.Tags
+			*dnews.Users
+		}{
+			&t,
+			&u,
+		}
+
+		renderTemplate(w, r, data, "admin.html")
 	})
 	router.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")

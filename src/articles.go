@@ -31,8 +31,9 @@ var TagRE = regexp.MustCompile(`^tags:\s(.*)$`)
 
 // Tag represents a specific tag for an article
 type Tag struct {
-	ID   int
-	Name string
+	ID      int
+	Created time.Time
+	Name    string
 }
 
 // Tags are a collection of Tag

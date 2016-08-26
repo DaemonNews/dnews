@@ -23,3 +23,8 @@ func LoadFileOrDie(s string) []byte {
 func FormatDate(t time.Time) string {
 	return t.Format(time.RFC1123)
 }
+
+// ShortDate produces are shorter formatted date
+func ShortDate(t time.Time) string {
+	return t.Format(time.RFC822)
+}

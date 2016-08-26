@@ -36,4 +36,4 @@ func (u *User) Combine() string {
 }
 
 // Users are a collection of User
-type Users *[]User
+type Users []*User
