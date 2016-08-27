@@ -19,7 +19,6 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-// TODO change this secret
 var insecure bool
 var cookieSecret string
 var crsfSecret string
@@ -146,7 +145,7 @@ func main() {
 			http.Error(w, fmt.Sprintf("Can't get user: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
-		// TODO sanatize!
+
 		a, err := dnews.SearchArticles(db, query, 100)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -395,7 +394,6 @@ func main() {
 
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
 
-	// TODO change this secret
 	if insecure {
 		log.Fatal(http.ListenAndServe(listen,
 			csrf.Protect([]byte("32-byte-long-auth-key"),
