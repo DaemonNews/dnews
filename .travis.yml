@@ -6,5 +6,8 @@ go:
   - 1.7
   - tip
 
+install:
+  - go get
+
 script:
   - go vet
