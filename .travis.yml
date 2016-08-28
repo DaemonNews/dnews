@@ -1,12 +1,10 @@
 language: go
-
 go:
-  - 1.5
-  - 1.6
+  - 1.6.3
   - 1.7
-  - tip
+sudo: false
 
-install: make get-deps
-
-script:
-  - go vet
+install:
+  - go get -v github.com/Masterminds/glide
+  - glide install
+  - go install -v . ./cmd/...
