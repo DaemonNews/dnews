@@ -1,6 +1,7 @@
 # dnews
 
 [![Build Status](https://travis-ci.org/DaemonNews/dnews.svg?branch=master)](https://travis-ci.org/DaemonNews/dnews)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DaemonNews/dnews)](https://goreportcard.com/report/github.com/DaemonNews/dnews)
 
 `dnews` is a CMS built specifically for hosting
 [daemon.news](https://daemon.news). It's main features are:
