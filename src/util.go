@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"time"
-
-	_ "github.com/ebfe/signify"
 )
 
 // LoadFileOrDie takes a string and loads a file, returning
