@@ -1,0 +1,16 @@
+{{ template "header.html" . }}
+{{ template "nav.html" .User }}
+<div class="content threequarters">
+  <h3>CLI Token</h3>
+  <hr />
+  <div class="article">
+{{ if .Error }}
+<p class="center red">{{ .Error }}</p>
+{{ end }}
+     <textarea class="fill token">
+{{ .Data }}
+     </textarea>
+   </div>
+</div>
+
+{{ template "footer.html" }}
