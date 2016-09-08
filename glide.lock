@@ -1,10 +1,16 @@
-hash: 8e3ff9427c54801d16d12c74cce781c65de8e36f940a6fc078cf5d3793d4e359
-updated: 2016-08-25T18:08:36.975150101-06:00
+hash: 24508b3efb2416511eefab44b4a7cd9f4feecec0ff32a07b6ff514e3684ff9b1
+updated: 2016-09-08T09:21:31.680616867-06:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
   subpackages:
   - edwards25519
+- name: github.com/armon/go-radix
+  version: 4239b77079c7b5d1243b7b4736304ce8ddb6f0f2
+- name: github.com/bgentry/speakeasy
+  version: a1ccbf2c40dfc8ce514b5c5c6e6d1429ea6880da
+- name: github.com/dgrijalva/jwt-go
+  version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/ebfe/bcrypt_pbkdf
   version: 3c8d2dcb253a13078b655a02b8e4bdc0e2b1fe35
   subpackages:
@@ -29,8 +35,12 @@ imports:
   version: 80f8150043c80fb52dee6bc863a709cdac7ec8f8
   subpackages:
   - oid
+- name: github.com/mattn/go-isatty
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
 - name: github.com/microcosm-cc/bluemonday
   version: 9dc199233bf72cc1aad9b61f73daf2f0075b9ee4
+- name: github.com/mitchellh/cli
+  version: fcf521421aa29bde1d93b6920dfce826d7932208
 - name: github.com/pkg/errors
   version: 17b591df37844cde689f4d5813e5cea0927d8dd2
 - name: github.com/qbit/pgenv
@@ -44,4 +54,8 @@ imports:
   subpackages:
   - html
   - html/atom
+- name: golang.org/x/sys
+  version: 30de6d19a3bd89a5f38ae4028e23aaa5582648af
+  subpackages:
+  - unix
 testImports: []
