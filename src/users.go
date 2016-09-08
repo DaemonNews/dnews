@@ -19,6 +19,7 @@ type User struct {
 	Hash    string
 	Authed  bool
 	Admin   bool
+	Token   string
 }
 
 var userLineRE = regexp.MustCompile(`^(.*)\s(.*)\s<(.*)>$`)
