@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/DaemonNews/dnews/src"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/feeds"
 	"github.com/gorilla/handlers"
@@ -22,6 +23,7 @@ import (
 var insecure bool
 var cookieSecret string
 var crsfSecret string
+var jwtSecret string
 var templ *template.Template
 var store *sessions.CookieStore
 var listen string
@@ -57,6 +59,7 @@ func init() {
 	flag.BoolVar(&insecure, "i", false, "Insecure mode")
 	flag.StringVar(&cookieSecret, "cookie", "something-very-secret", "Secret to use for cookie store")
 	flag.StringVar(&crsfSecret, "crsf", "32-byte-long-auth-key", "Secret to use for cookie store")
+	flag.StringVar(&jwtSecret, "jwt", "super secret neat", "Secret to use for jwt")
 	flag.StringVar(&listen, "http", ":8080", "Listen on")
 
 	flag.Parse()
@@ -294,6 +297,98 @@ func main() {
 
 		renderTemplate(w, r, data, "login.html")
 	})
+	router.HandleFunc("/api/{type}/{action}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		typ := vars["type"]
+		action := vars["action"]
+
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Not Authorized!", http.StatusUnauthorized)
+			return
+		}
+		token, err := jwt.Parse(authHeader, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecret), nil
+		})
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		if token.Valid {
+			switch typ {
+			default:
+				http.Error(w, "Invalid API Requests!", http.StatusNotImplemented)
+				return
+			case "status":
+				if action == "ok" {
+					fmt.Fprint(w, "OK")
+				}
+
+			}
+		}
+	})
+
+	router.HandleFunc("/api/gentoken", func(w http.ResponseWriter, r *http.Request) {
+		session, err := store.Get(r, "session-name")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		uVal := session.Values["user"]
+		var u, ok = uVal.(*dnews.User)
+		if !ok {
+			uVal = &dnews.User{}
+			session.Values["user"] = &uVal
+			session.Save(r, w)
+		}
+
+		var data = &response{}
+		data.User = &u
+
+		if ok && u.Admin {
+			// Check our token field even if we haven't set it before
+			token, err := jwt.Parse(u.Token, func(token *jwt.Token) (interface{}, error) {
+				return []byte(jwtSecret), nil
+			})
+
+			if err != nil {
+				if ve, ok := err.(*jwt.ValidationError); ok {
+					if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+						data.Error = "Invalid token"
+					} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+						data.Error = "Previous token expired"
+					} else {
+						data.Error = err.Error()
+					}
+				}
+			}
+
+			if !token.Valid {
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+					"eml": u.Email,
+					// 168 = 7 days
+					"exp": time.Now().Add(time.Hour * 168).Unix(),
+					"nbf": time.Now().Unix(),
+				})
+
+				tokenString, err := token.SignedString([]byte(jwtSecret))
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				u.Token = tokenString
+				session.Values["user"] = &u
+				session.Save(r, w)
+			}
+			data.Data = u.Token
+			renderTemplate(w, r, data, "token.html")
+		}
+	})
+
 	router.HandleFunc("/admin", func(w http.ResponseWriter, r *http.Request) {
 		session, err := store.Get(r, "session-name")
 		if err != nil {
@@ -339,8 +434,7 @@ func main() {
 				renderTemplate(w, r, data, "perm_denied.html")
 			}
 		} else {
-			http.Error(w, "Invalid User!", http.StatusInternalServerError)
-			return
+			renderTemplate(w, r, data, "login.html")
 		}
 
 	})
