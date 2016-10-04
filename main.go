@@ -27,6 +27,7 @@ var jwtSecret string
 var templ *template.Template
 var store *sessions.CookieStore
 var listen string
+var version string
 
 type response struct {
 	Error string
@@ -61,8 +62,14 @@ func init() {
 	flag.StringVar(&crsfSecret, "crsf", "32-byte-long-auth-key", "Secret to use for cookie store")
 	flag.StringVar(&jwtSecret, "jwt", "super secret neat", "Secret to use for jwt")
 	flag.StringVar(&listen, "http", ":8080", "Listen on")
+	ver := flag.Bool("v", false, "Print version and exit")
 
 	flag.Parse()
+
+	if *ver {
+		fmt.Println(version)
+		os.Exit(0)
+	}
 
 	store = sessions.NewCookieStore([]byte(cookieSecret))
 	templ, err = template.New("dnews").Funcs(funcMap).ParseGlob("templates/*.html")

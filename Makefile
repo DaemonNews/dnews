@@ -1,3 +1,5 @@
+VERSION=`git describe --tags 2>/dev/null || git log -n 1 --format="%h"`
+
 all: glide get-deps
 
 glide:
@@ -8,4 +10,4 @@ get-deps: glide
 
 build: glide
 	go vet
-	go build
+	go build -ldflags "-X main.version=${VERSION}"
