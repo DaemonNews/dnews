@@ -1,3 +1,6 @@
+create extension if not exists pg_trm;
+create extension if not exists pgcrypto;
+
 drop table if exists bugs;
 drop table if exists tags;
 drop table if exists article_tags;
@@ -106,7 +109,7 @@ create or replace function hash(pass text) returns text as $$
 	select crypt(pass, gen_salt('bf', 10));	
 $$ language sql;
 
-insert into users (fname, lname, username, hash, email) values ('Charlie', 'Root', 'root', hash('omgSnakes'), 'root@localhost');
+insert into users (fname, lname, username, hash, email, admin) values ('Charlie', 'Root', 'root', hash('omgSnakes'), 'root@localhost', true);
 insert into users (fname, lname, username, hash, email) values ('Aaron', 'Bieber', 'aaron', hash('omgSnakes'), 'aaron@daemon.news');
 insert into pubkeys (userid, key) values (2, 'untrusted comment: signify public key
 RWSYzBxZQY5obtJcBPKBQHzy6EpyV/D5VpDB58f1Hrn4NqaC1Jo2fSz9');
