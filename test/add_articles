@@ -1,0 +1,3 @@
+#!/bin/sh
+
+dncli -l -a -mdfile test/1.md -pubkey test/1.pub -sig test/1.sig

@@ -8,6 +8,12 @@ glide:
 get-deps: glide
 	glide i
 
+db:
+	psql < sql/postgres.sql
+
+test: db
+	sh test/add_articles
+
 build: glide
 	go vet
 	go build -ldflags "-X main.version=${VERSION}" github.com/DaemonNews/dnews
