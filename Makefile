@@ -10,4 +10,5 @@ get-deps: glide
 
 build: glide
 	go vet
-	go build -ldflags "-X main.version=${VERSION}"
+	go build -ldflags "-X main.version=${VERSION}" github.com/DaemonNews/dnews
+	go build -ldflags "-X main.version=${VERSION}" github.com/DaemonNews/dnews/cmd/...
