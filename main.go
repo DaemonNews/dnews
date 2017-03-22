@@ -185,12 +185,13 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// TODO populate body?
+
 		feed.Items = []*feeds.Item{}
 
 		for _, article := range a {
 			f := feeds.Item{}
 			f.Title = article.Title
+			f.Description = string(article.Body)
 			f.Link = &feeds.Link{Href: fmt.Sprintf("http://daemon.news/article/%s", article.Slug)}
 			f.Author = &feeds.Author{Name: article.Author.FName, Email: article.Author.Email}
 			f.Created = article.Date
